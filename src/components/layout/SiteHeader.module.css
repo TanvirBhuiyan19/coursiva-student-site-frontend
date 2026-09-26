@@ -1,0 +1,209 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: var(--header-h);
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex-shrink: 1;
+  color: var(--tx);
+}
+.brand:hover {
+  color: var(--tx);
+}
+
+.brandName {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.nav {
+  flex: 1;
+  min-width: 0;
+}
+.nav ul {
+  display: flex;
+  gap: 14px 16px;
+  flex-wrap: wrap;
+}
+.nav a {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tx2);
+}
+.nav a:hover {
+  color: var(--brand);
+}
+.nav a[aria-current='page'] {
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-shrink: 0;
+}
+.spacer {
+  display: none;
+  flex: 1;
+}
+.avatarLink {
+  width: 34px;
+  height: 34px;
+  font-size: 12.5px;
+  color: var(--on-accent);
+}
+.avatarLink:hover {
+  color: var(--on-accent);
+  filter: brightness(1.08);
+}
+.menuBtn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  align-items: center;
+  justify-content: center;
+  color: var(--tx-strong);
+  padding: 0;
+}
+.guest {
+  display: flex;
+  gap: 10px;
+}
+
+/* Notifications popover */
+.notifWrap {
+  position: relative;
+}
+.dot {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--alert);
+  border: 1.5px solid var(--surface);
+}
+.popover {
+  position: absolute;
+  right: 0;
+  top: 44px;
+  width: 330px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-pop);
+  padding: 8px;
+  z-index: 80;
+}
+.popHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px 6px;
+}
+.popHead h2 {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13.5px;
+}
+.popItem {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  color: var(--tx);
+}
+.popItem:hover {
+  background: var(--hover);
+  color: var(--tx);
+}
+.popDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+  background: var(--brand);
+}
+.popDot[data-read='true'] {
+  background: var(--line-strong);
+}
+.popText {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.popWhen {
+  font-size: 11.5px;
+  color: var(--tx-muted);
+  margin-top: 2px;
+}
+.popEmpty {
+  padding: 16px 10px;
+  font-size: 13px;
+  color: var(--tx-muted);
+}
+
+@media (max-width: 1023px) {
+  .nav,
+  .hideTablet {
+    display: none;
+  }
+  .spacer {
+    display: block;
+  }
+  .menuBtn {
+    display: inline-flex;
+  }
+  .actions {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 719px) {
+  .inner {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    gap: 12px;
+  }
+  .hideMobile {
+    display: none;
+  }
+  .popover {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    top: 62px;
+    width: auto;
+    max-height: calc(100vh - 80px);
+    overflow: auto;
+  }
+}

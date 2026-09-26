@@ -1,0 +1,86 @@
+/*
+ * Design tokens for the learner site (designs/Student Site.dc.html). Brand tokens (--brand*) are injected per tenant
+ * by the root layout (lib/theme.ts); everything here is tenant-independent. Student surfaces have no dark mode.
+ * Define every token you use — never `var(--x, fallback)`.
+ */
+:root {
+  /* Text */
+  --tx: oklch(0.25 0.02 275);
+  --tx-strong: oklch(0.3 0.02 275);
+  --tx2: oklch(0.42 0.02 275);
+  --tx3: oklch(0.46 0.02 275);
+  /* Meta text. The design uses L 0.55; 0.5 keeps small text at WCAG AA 4.5:1 on white. */
+  --tx-muted: oklch(0.5 0.015 275);
+  --tx-faint: oklch(0.62 0.015 275);
+  --placeholder: oklch(0.58 0.015 275);
+
+  /* Surfaces & lines */
+  --bg: oklch(1 0 0);
+  --surface: oklch(1 0 0);
+  --surface-soft: oklch(0.985 0.003 275);
+  --surface-sunk: oklch(0.965 0.008 275);
+  --hover: oklch(0.97 0.008 275);
+  --line: oklch(0.93 0.01 275);
+  --line-strong: oklch(0.9 0.012 275);
+  --line-input: oklch(0.88 0.012 275);
+  --radio-off: oklch(0.8 0.015 275);
+  --track: oklch(0.94 0.008 275);
+
+  /* Status */
+  --star: oklch(0.68 0.12 70);
+  --ok-fg: oklch(0.42 0.11 150);
+  --ok-bg: oklch(0.95 0.03 150);
+  --ok-line: oklch(0.88 0.06 150);
+  --ok-solid: oklch(0.55 0.13 150);
+  --bad-fg: oklch(0.5 0.17 25);
+  --bad-bg: oklch(0.97 0.02 25);
+  --bad-line: oklch(0.62 0.18 25);
+  --alert: oklch(0.58 0.19 25);
+  --on-dark-ok: oklch(0.8 0.15 150);
+  --on-dark-bad: oklch(0.85 0.09 25);
+
+  /* Lesson type chips */
+  --chip-video-bg: oklch(0.94 0.03 240);
+  --chip-video-fg: oklch(0.42 0.1 240);
+  --chip-quiz-bg: oklch(0.95 0.04 75);
+  --chip-quiz-fg: oklch(0.46 0.1 70);
+  --chip-neutral-bg: oklch(0.95 0.008 275);
+  --chip-neutral-fg: oklch(0.45 0.02 275);
+  --file-pdf: oklch(0.52 0.16 25);
+  --file-slides: oklch(0.45 0.1 250);
+
+  /* Elevation */
+  --shadow-card-hover: 0 14px 36px oklch(0.4 0.1 275 / 0.12);
+  --shadow-pop: 0 18px 50px oklch(0.3 0.06 275 / 0.16);
+  --shadow-drawer: -20px 0 60px oklch(0.2 0.04 275 / 0.25);
+  --scrim: oklch(0.15 0.02 275 / 0.5);
+  --toast-bg: oklch(0.22 0.02 280);
+  --on-accent: oklch(1 0 0);
+  --glass: oklch(1 0 0 / 0.9);
+
+  /* Type */
+  --font-body: var(--font-instrument-sans), system-ui, sans-serif;
+  --font-display: var(--font-bricolage), system-ui, sans-serif;
+
+  /* Layout */
+  --content: 1160px;
+  --gutter: 28px;
+  --header-h: 61px;
+  --radius-sm: 8px;
+  --radius: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --gutter: 24px;
+  }
+}
+
+@media (max-width: 719px) {
+  :root {
+    --gutter: 20px;
+  }
+}

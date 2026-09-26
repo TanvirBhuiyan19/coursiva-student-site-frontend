@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# env: commit only the non-secret templates
+!.env.example
+!.env.development
+
+# test output
+/playwright-report
+/test-results
+/e2e/.auth

@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Coursiva — learner site
 
-## Getting Started
+The white-label storefront and learning app every Coursiva tenant runs on their own domain: catalogue, course
+pages, checkout, membership, the course player, community, certificates and account. One Next.js deployment serves
+all tenants; each gets its own brand, locale, currency, content, SEO and plan features.
 
-First, run the development server:
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+nvm use            # Node 22
+npm install
+npm run dev        # mock API on :8787 + Next.js on :3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open **http://amplify.localhost:3000** (the design's tenant) or **http://northwind.localhost:3000** (a second tenant:
+Emerald theme, en-GB, GBP, no community/membership, white-label). Sign in as `jordan.tate@gmail.com` / `password`.
+Chrome, Edge and Firefox resolve `*.localhost` to your machine; plain `localhost:3000` serves Amplify.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Test payment cards: `4242 4242 4242 4242` succeeds, `4000 0000 0000 0002` is declined; coupon `LAUNCH20` takes 20% off.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Command              | What it does                                                                  |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `npm run dev`        | Mock API + Next dev server                                                    |
+| `npm run check`      | Typecheck, lint, format check, unit + API contract tests                      |
+| `npm run e2e`        | Production build + Playwright: SEO, multi-tenancy, purchase/player flows, axe |
+| `npm run build`      | Production build (no API needed at build time)                                |
+| `npm run revalidate` | Purge cached tenant data (simulates Laravel's revalidation webhook)           |
 
-To learn more about Next.js, take a look at the following resources:
+## Docs
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [docs/architecture.md](docs/architecture.md) — multi-tenancy, rendering & caching, SEO, auth, deployment
+- [docs/api/](docs/api/README.md) — the API contract the Laravel backend implements
+- [CLAUDE.md](CLAUDE.md) — conventions for contributors
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Stack
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js 16 (App Router) · React 19 + React Compiler · TypeScript strict · next-intl · TanStack Query ·
+CSS Modules on design tokens · Hono (mock API) · Vitest · Playwright + axe-core.

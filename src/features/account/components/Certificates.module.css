@@ -1,0 +1,120 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 24px;
+}
+.card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: 0 20px 50px oklch(0.4 0.1 275 / 0.06);
+}
+.cert {
+  margin: 12px;
+  padding: 30px 24px 32px;
+  border: 1px solid var(--brand-tint-border);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--brand-tint), var(--surface));
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.kicker {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--tx3);
+  margin-top: 18px;
+}
+.name {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  margin-top: 10px;
+}
+.completed {
+  font-size: 14px;
+  color: var(--tx3);
+  margin-top: 8px;
+}
+.course {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--brand);
+  margin-top: 6px;
+}
+.meta {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  margin: 22px 0 0;
+  flex-wrap: wrap;
+}
+.meta > div {
+  display: flex;
+  flex-direction: column-reverse;
+}
+.meta dd {
+  margin: 0;
+  font-weight: 700;
+  font-size: 13px;
+}
+.meta dt {
+  font-size: 12px;
+  color: var(--tx3);
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+}
+.badge {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--tx3);
+  min-width: 220px;
+}
+.badgeIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--brand-tint);
+  color: var(--brand);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.empty {
+  margin-top: 24px;
+  padding: 40px;
+  text-align: center;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
+  color: var(--tx3);
+}
+.emptyTitle {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--tx);
+  margin-bottom: 6px;
+}
+@media (max-width: 719px) {
+  .name {
+    font-size: 24px;
+  }
+  .meta {
+    gap: 18px;
+  }
+}
