@@ -31,7 +31,9 @@ const privatePages = [
 
 async function audit(page: Page, path: string) {
   await page.goto(path);
-  await page.waitForLoadState('networkidle');
+  // Wait for data-driven content, not network silence (prefetches and polling make networkidle flaky).
+  await expect(page.locator('main')).toBeVisible();
+  await expect(page.locator('.skeleton')).toHaveCount(0, { timeout: 15_000 });
   const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
   expect(
     violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
@@ -42,6 +44,8 @@ async function audit(page: Page, path: string) {
 for (const width of [1280, 390]) {
   test.describe(`${width}px`, () => {
     test.use({ viewport: { width, height: 900 } });
+    // Each test sweeps many pages.
+    test.describe.configure({ timeout: 120_000 });
 
     test('public pages', async ({ page }) => {
       for (const p of publicPages) await audit(page, tenantUrl('amplify', p));

@@ -1,0 +1,22 @@
+.rating {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  vertical-align: -1px;
+}
+.base {
+  color: var(--star-empty);
+}
+.fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  overflow: hidden;
+  color: var(--star);
+}
+@media (forced-colors: active) {
+  .fill {
+    color: CanvasText;
+  }
+}
