@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
+import { HideOnPaths } from '@/components/layout/HideOnPaths';
 import { MobileTabBar } from '@/components/layout/MobileTabBar';
 import { getCurrentSite, siteOrigin } from '@/features/tenant/server';
 import { brandCss, themeColor } from '@/lib/theme';
@@ -76,7 +77,10 @@ export default async function TenantRootLayout({ children }: { children: ReactNo
             <main id="main" tabIndex={-1}>
               {children}
             </main>
-            <SiteFooter site={site} />
+            {/* The course player is a focused, full-height workspace (its sidebar stays fixed), so no footer there. */}
+            <HideOnPaths prefixes={['/learn/']}>
+              <SiteFooter site={site} />
+            </HideOnPaths>
             <MobileTabBar features={site.features} />
           </Providers>
         </NextIntlClientProvider>

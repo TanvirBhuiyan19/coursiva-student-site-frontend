@@ -359,7 +359,7 @@ function QA({ lesson, course }: { lesson: Lesson; course: PlayerCourse }) {
   const [draft, setDraft] = useState('');
 
   return (
-    <section className={styles.section} aria-labelledby={`${id}-h`} style={{ maxWidth: 680 }}>
+    <section className={styles.section} aria-labelledby={`${id}-h`}>
       <div className={styles.sectionHead}>
         <h2 id={`${id}-h`} className={styles.sectionTitle}>
           {t('qa', { count: lesson.questions.length })}

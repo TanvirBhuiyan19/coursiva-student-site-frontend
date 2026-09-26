@@ -5,6 +5,11 @@
 .aside {
   width: 320px;
   flex-shrink: 0;
+  /* Fixed beside the lesson: stays put under the site header and scrolls on its own. */
+  position: sticky;
+  top: var(--header-h);
+  height: calc(100dvh - var(--header-h));
+  align-self: flex-start;
   border-right: 1px solid var(--line);
   background: var(--surface-soft);
   display: flex;
@@ -122,7 +127,8 @@
   padding: 28px 36px 60px;
 }
 .lesson {
-  max-width: 860px;
+  max-width: 880px;
+  margin: 0 auto;
 }
 
 /* Video */
@@ -302,7 +308,6 @@
   line-height: 1.65;
   color: var(--tx2);
   margin-top: 12px;
-  max-width: 680px;
 }
 .section {
   margin-top: 28px;
@@ -357,7 +362,6 @@
   color: var(--file-slides);
 }
 .notes {
-  max-width: 680px;
   margin-top: 10px;
   background: var(--surface-soft);
 }
@@ -427,6 +431,8 @@
     min-height: 0;
   }
   .aside {
+    position: static;
+    height: auto;
     width: 100%;
     border-right: none;
     border-top: 1px solid var(--line);
