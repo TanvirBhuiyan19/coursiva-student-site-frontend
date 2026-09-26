@@ -33,6 +33,8 @@ export default defineConfig([
       // Typed fetch helpers (`apiGet<T>()`) intentionally use a single type parameter.
       '@typescript-eslint/no-unnecessary-type-parameters': 'off',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
+      // DOM globals with generic names type-check silently when a local variable is missing (e.g. `origin`).
+      'no-restricted-globals': ['error', 'origin', 'name', 'status', 'event', 'length', 'top', 'parent', 'self', 'close', 'open', 'stop'],
       'no-restricted-imports': [
         'error',
         {

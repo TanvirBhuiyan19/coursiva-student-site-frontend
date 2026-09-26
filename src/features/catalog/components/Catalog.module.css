@@ -20,14 +20,14 @@
 }
 .searchIcon {
   position: absolute;
-  left: 13px;
+  inset-inline-start: 13px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--tx-faint);
   pointer-events: none;
 }
 .search {
-  padding-left: 36px;
+  padding-inline-start: 36px;
 }
 .chips {
   display: flex;
@@ -35,7 +35,7 @@
   flex-wrap: wrap;
 }
 .right {
-  margin-left: auto;
+  margin-inline-start: auto;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -119,7 +119,7 @@
   margin-top: 4px;
 }
 .bundlePrice {
-  text-align: right;
+  text-align: end;
 }
 .compare {
   font-size: 12px;
@@ -149,7 +149,7 @@
 
 @media (max-width: 1023px) {
   .right {
-    margin-left: 0;
+    margin-inline-start: 0;
   }
 }
 
@@ -159,8 +159,8 @@
     text-align: center;
   }
   .hero p {
-    margin-left: auto;
-    margin-right: auto;
+    margin-inline-start: auto;
+    margin-inline-end: auto;
   }
   .searchWrap {
     width: 100%;

@@ -13,6 +13,9 @@ export interface TenantResolution {
   primaryHost: string;
   status: 'active' | 'suspended';
   indexable: boolean;
+  /** Needed by the proxy to route `/<lang>/…` URLs without a second lookup. See src/i18n/locales.ts. */
+  defaultLocale: string;
+  locales: string[];
 }
 
 export type SocialNetwork = 'linkedin' | 'instagram' | 'youtube' | 'x' | 'facebook' | 'tiktok';
@@ -29,8 +32,10 @@ export interface Site {
   /** White-label plans hide the "Powered by Coursiva" credit. */
   whiteLabel: boolean;
   brand: Brand;
-  /** BCP 47, e.g. `en-US`. Drives formatting and the message catalogue. */
-  locale: string;
+  /** BCP 47 tag of the main language, e.g. `en-US` — served unprefixed. */
+  defaultLocale: string;
+  /** Every published language, default first; others are served under `/<lang>/…` (src/i18n/locales.ts). */
+  locales: string[];
   currency: string;
   primaryHost: string;
   supportEmail: string;

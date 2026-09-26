@@ -264,7 +264,14 @@ const JORDAN = 'usr_jordan';
 export function amplify(): TenantData {
   const eDone = ids('e').slice(0, 4);
   return {
-    resolution: { tenant: 'amplify', primaryHost: 'amplify.localhost', status: 'active', indexable: true },
+    resolution: {
+      tenant: 'amplify',
+      primaryHost: 'amplify.localhost',
+      status: 'active',
+      indexable: true,
+      defaultLocale: 'en-US',
+      locales: ['en-US'],
+    },
     site: {
       slug: 'amplify',
       name: 'Amplify Coaching',
@@ -273,7 +280,8 @@ export function amplify(): TenantData {
       logoUrl: null,
       whiteLabel: false,
       brand: { hue: 275, chroma: 0.2 },
-      locale: 'en-US',
+      defaultLocale: 'en-US',
+      locales: ['en-US'],
       currency: 'USD',
       primaryHost: 'amplify.localhost',
       supportEmail: 'help@amplifycoaching.com',

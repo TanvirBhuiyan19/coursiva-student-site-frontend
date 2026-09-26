@@ -15,13 +15,16 @@ Browser ──► CDN (keys on Host) ──► Next.js ──┬─► proxy.ts 
   to poison a CDN) and resolves it via `GET /platform/v1/domains/resolve` (memoised 60 s). `<slug>.<root>` subdomains
   and verified custom domains both work. Unknown → 404; suspended → 503.
 - **Canonical host** — every other host of a tenant 308s to `primary_host` (e.g. subdomain → custom domain).
-- **Routing** — the request is rewritten to `/<slug>/<path>`; `app/[tenant]/layout.tsx` is the root layout.
-  `next/root-params` gives any Server Component the tenant (`currentTenant()`) without prop drilling. Internal
+- **Routing** — the request is rewritten to `/<slug>/<locale>/<path>`; `app/[tenant]/[locale]/layout.tsx` is the root
+  layout. `next/root-params` gives any Server Component the tenant and locale (`currentScope()`) without prop
+  drilling. Tenant-level files (`sitemap.xml`, `robots.txt`, `icon.png`) live in `app/[tenant]/`. Internal
   `/<slug>/…` URLs are not reachable directly (they'd be double-prefixed → 404), so there are no duplicate URLs.
 - **Theme** — `lib/theme.ts` derives all brand colours from the tenant's hue/chroma and the root layout inlines them
   as CSS variables: first paint is on-brand, zero client JS, no flash.
-- **Locale & currency** — per tenant (`site.locale`, `site.currency`), via next-intl. Formatting always uses the
-  tenant locale so server and client HTML match.
+- **Languages** — each tenant publishes one or more (`site.locales`); the default is unprefixed, others live under
+  `/<lang>/…` with hreflang alternates, and the proxy rewrites to `/{tenant}/{locale}/…`. UI copy via next-intl
+  (`messages/<lang>.json`, English fallback), tenant content via `?locale=` on API reads, `dir="rtl"` automatic,
+  CSS on logical properties. See [i18n.md](i18n.md). Currency is per tenant (`site.currency`).
 - **Entitlements** — `site.features` hides UI (nav, sections, pages → 404); the API enforces the same rules.
 
 ## 2. Rendering & caching (SEO)

@@ -104,7 +104,7 @@
 .dot {
   position: absolute;
   top: 5px;
-  right: 6px;
+  inset-inline-end: 6px;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -113,7 +113,7 @@
 }
 .popover {
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   top: 44px;
   width: 330px;
   background: var(--surface);
@@ -199,8 +199,8 @@
   }
   .popover {
     position: fixed;
-    left: 12px;
-    right: 12px;
+    inset-inline-start: 12px;
+    inset-inline-end: 12px;
     top: 62px;
     width: auto;
     max-height: calc(100vh - 80px);

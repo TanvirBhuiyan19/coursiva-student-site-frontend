@@ -1,11 +1,13 @@
 import { getCatalog } from '@/features/catalog/server';
 import { CDN_CACHE } from '@/lib/cacheHeaders';
 import { getSite, siteOrigin } from '@/features/tenant/server';
+import { localizePath } from '@/i18n/locales';
 import { routes } from '@/lib/routes';
 
 /**
- * Per-tenant sitemap at `/sitemap.xml`, listing only indexable public pages on the tenant's canonical host.
- * Revalidated with the catalogue (course publishes and edits purge the `t:<slug>:catalog` tag).
+ * Per-tenant sitemap at `/sitemap.xml`: every indexable public page, in every language the tenant publishes, on the
+ * canonical host. With more than one language each entry lists its translations (`xhtml:link hreflang`) plus an
+ * x-default, as Google recommends. Revalidated with the catalogue (`t:<slug>:catalog`).
  */
 /**
  * Rendered per request (the tenant comes from the URL, so nothing can be prebuilt) from Data-Cache-backed reads, and
@@ -39,14 +41,26 @@ export async function GET(_req: Request, { params }: RouteContext<'/[tenant]/sit
       ]
     : [];
 
+  const abs = (locale: string, path: string) => {
+    const p = localizePath(site, locale, path);
+    return xmlEscape(`${origin}${p === '/' ? '' : p}`);
+  };
+  const multi = site.locales.length > 1;
   const body = entries
-    .map(
-      (e) =>
-        `<url><loc>${xmlEscape(`${origin}${e.path === '/' ? '' : e.path}`)}</loc>${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ''}<changefreq>${e.changefreq}</changefreq><priority>${e.priority.toFixed(1)}</priority></url>`,
+    .flatMap((e) =>
+      site.locales.map((locale) => {
+        const links = multi
+          ? [
+              ...site.locales.map((l) => `<xhtml:link rel="alternate" hreflang="${l}" href="${abs(l, e.path)}"/>`),
+              `<xhtml:link rel="alternate" hreflang="x-default" href="${abs(site.defaultLocale, e.path)}"/>`,
+            ].join('')
+          : '';
+        return `<url><loc>${abs(locale, e.path)}</loc>${links}${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ''}<changefreq>${e.changefreq}</changefreq><priority>${e.priority.toFixed(1)}</priority></url>`;
+      }),
     )
     .join('');
   return new Response(
-    `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${body}</urlset>`,
+    `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"${multi ? ' xmlns:xhtml="http://www.w3.org/1999/xhtml"' : ''}>${body}</urlset>`,
     {
       headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': CDN_CACHE },
     },

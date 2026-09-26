@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/components/toast/Toaster';
 import { BrandMark } from '@/components/layout/BrandMark';
@@ -197,7 +197,7 @@ export function Invoice({ orderId, site }: { orderId: string; site: Pick<Site, '
                   {o.seller.email}
                 </p>
               </div>
-              <div style={{ textAlign: 'right' }}>
+              <div style={{ textAlign: 'end' }}>
                 <h1 className="eyebrow" style={{ fontSize: 13 }}>
                   {t('invoice')}
                 </h1>
@@ -253,7 +253,7 @@ export function Invoice({ orderId, site }: { orderId: string; site: Pick<Site, '
                 ))}
               </tbody>
             </table>
-            <dl className={styles.totals} style={{ maxWidth: 300, marginLeft: 'auto' }}>
+            <dl className={styles.totals} style={{ maxWidth: 300, marginInlineStart: 'auto' }}>
               <div>
                 <dt>{t('subtotal')}</dt>
                 <dd>{f.money(o.subtotal)}</dd>

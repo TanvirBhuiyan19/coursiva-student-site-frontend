@@ -1,6 +1,5 @@
 'use client';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, useAppPathname } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { Icon, type IconName } from '@/components/icons';
 import type { Site } from '@/features/tenant/types';
@@ -12,7 +11,7 @@ const HIDDEN = ['/learn/', '/checkout', '/sign-in', '/sign-up', '/forgot-passwor
 
 export function MobileTabBar({ features }: { features: Site['features'] }) {
   const t = useTranslations('nav');
-  const pathname = usePathname();
+  const pathname = useAppPathname();
   if (HIDDEN.some((p) => pathname.startsWith(p))) return null;
 
   const tabs: { href: string; label: string; icon: IconName; match: string[] }[] = [

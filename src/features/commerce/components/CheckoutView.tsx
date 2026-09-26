@@ -1,6 +1,5 @@
 'use client';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link, useLocalizedRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useId, useState, type SyntheticEvent } from 'react';
 import { useToast } from '@/components/toast/Toaster';
@@ -37,7 +36,7 @@ export function CheckoutView({
   const tc = useTranslations('common');
   const f = useFormat();
   const id = useId();
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const toast = useToast();
   const { user } = useSession();
   const checkout = useCheckout();

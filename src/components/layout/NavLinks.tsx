@@ -1,6 +1,5 @@
 'use client';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, useAppPathname } from '@/i18n/navigation';
 import styles from './SiteHeader.module.css';
 
 export interface NavItem {
@@ -17,7 +16,7 @@ export const isActive = (pathname: string, item: NavItem) =>
     : pathname === item.href || pathname.startsWith(`${item.href}/`) || !!item.also?.some((p) => pathname.startsWith(p));
 
 export function NavLinks({ items, label }: { items: NavItem[]; label: string }) {
-  const pathname = usePathname();
+  const pathname = useAppPathname();
   return (
     <nav className={styles.nav} aria-label={label}>
       <ul>

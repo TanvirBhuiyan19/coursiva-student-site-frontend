@@ -222,7 +222,7 @@
   width: 28px;
   height: 1px;
   background: var(--line-strong);
-  margin-right: 2px;
+  margin-inline-end: 2px;
 }
 .stepNum {
   width: 18px;
@@ -485,7 +485,7 @@
 }
 .receipt {
   margin-top: 24px;
-  text-align: left;
+  text-align: start;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 22px;
@@ -508,7 +508,7 @@
 }
 .next {
   margin-top: 20px;
-  text-align: left;
+  text-align: start;
   border: 1px solid var(--line);
   background: var(--surface-soft);
   border-radius: var(--radius-lg);
@@ -544,7 +544,7 @@
 }
 .claims {
   margin-top: 16px;
-  text-align: left;
+  text-align: start;
   font-size: 13px;
 }
 .claims code {
@@ -584,7 +584,7 @@
   font-size: 14px;
 }
 .invTable th {
-  text-align: left;
+  text-align: start;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -599,7 +599,7 @@
   vertical-align: top;
 }
 .invTable .num2 {
-  text-align: right;
+  text-align: end;
 }
 .paid {
   display: inline-block;

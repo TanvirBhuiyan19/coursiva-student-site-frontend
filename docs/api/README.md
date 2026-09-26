@@ -31,6 +31,12 @@ tests disagree, the tests win. Resource shapes are the TypeScript types in `src/
     the first message per field is shown inline.
 - **Copy in error messages is user-facing** and should be written for learners (see the mock for tone).
 
+## Languages
+
+Content endpoints accept `?locale=<BCP 47>` (server reads) and `Accept-Language` (browser calls) and return tenant
+content in that language, falling back to the tenant default for untranslated fields. Slugs are the same in every
+language. Validation messages should honour `Accept-Language` too. Details: [../i18n.md](../i18n.md).
+
 ## Tenancy
 
 Every tenant-scoped request identifies the tenant; every query is scoped to it (row-level isolation):

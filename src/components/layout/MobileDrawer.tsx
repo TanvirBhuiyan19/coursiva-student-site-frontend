@@ -1,6 +1,5 @@
 'use client';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, useAppPathname, useHardNavigate } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef } from 'react';
 import { Icon, type IconName } from '@/components/icons';
@@ -23,7 +22,8 @@ export function MobileDrawer({
 }) {
   const t = useTranslations('header');
   const ref = useRef<HTMLDialogElement>(null);
-  const pathname = usePathname();
+  const pathname = useAppPathname();
+  const hardNavigate = useHardNavigate();
   const { user } = useSession();
   const logout = useLogout();
 
@@ -70,7 +70,7 @@ export function MobileDrawer({
               <li key={item.href}>
                 <Link href={item.href} onClick={onClose} aria-current={isActive(pathname, item) ? 'page' : undefined}>
                   {item.label}
-                  <Icon name="chevronRight" size={18} />
+                  <Icon name="chevronRight" size={18} className="flip-rtl" />
                 </Link>
               </li>
             ))}
@@ -115,7 +115,7 @@ export function MobileDrawer({
                   logout.mutate(undefined, {
                     onSuccess: () => {
                       onClose();
-                      window.location.assign(routes.signIn());
+                      hardNavigate(routes.signIn());
                     },
                   })
                 }

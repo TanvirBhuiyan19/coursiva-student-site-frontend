@@ -1,19 +1,22 @@
 import { getRequestConfig } from 'next-intl/server';
-import { currentTenant, getSite } from '@/features/tenant/server';
+import { env } from '@/config/env';
+import { currentScope } from '@/features/tenant/server';
+import { loadMessages } from './messages';
 
 /**
- * UI copy comes from messages/<lang>.json; the language is the tenant's locale (a learner site has one language, set
- * in the dashboard). Tenant content — course titles, page sections — arrives already written from the API.
- * Read via `next/root-params`, so pages stay statically renderable.
+ * UI copy for the request's locale — the `[locale]` root segment the proxy derived from the URL (`/es/…`, or the
+ * tenant default when unprefixed). Tenant content (course titles, page sections) arrives translated from the API.
  */
-const catalogues = {
-  en: () => import('../../messages/en.json'),
-} as const;
-
 export default getRequestConfig(async () => {
-  const site = await getSite(await currentTenant());
-  const lang = site.locale.split('-')[0] ?? 'en';
-  const load = lang in catalogues ? catalogues[lang as keyof typeof catalogues] : catalogues.en;
-  const messages = (await load()).default;
-  return { locale: site.locale, messages, timeZone: 'UTC' };
+  const { locale } = await currentScope();
+  return {
+    locale,
+    messages: await loadMessages(locale),
+    timeZone: 'UTC',
+    // A missing key falls back to English in loadMessages; only a key missing everywhere reaches here.
+    onError: (error) => {
+      if (env.isDev) console.error(error);
+    },
+    getMessageFallback: ({ namespace, key }) => [namespace, key].filter(Boolean).join('.'),
+  };
 });

@@ -76,7 +76,7 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--tx-strong);
-  text-align: left;
+  text-align: start;
 }
 .space:hover {
   background: var(--hover);
@@ -286,7 +286,7 @@
   background: var(--brand-tint);
   border-radius: 5px;
   padding: 2px 7px;
-  margin-left: 4px;
+  margin-inline-start: 4px;
   vertical-align: middle;
 }
 .postMeta {

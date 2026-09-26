@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useEnrollmentFor } from '@/features/learning/api';
 import { routes } from '@/lib/routes';

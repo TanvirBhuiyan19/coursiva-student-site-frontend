@@ -10,7 +10,7 @@
   top: var(--header-h);
   height: calc(100dvh - var(--header-h));
   align-self: flex-start;
-  border-right: 1px solid var(--line);
+  border-inline-end: 1px solid var(--line);
   background: var(--surface-soft);
   display: flex;
   flex-direction: column;
@@ -26,6 +26,9 @@
 }
 .back::before {
   content: '← ';
+}
+:global([dir='rtl']) .back::before {
+  content: '→ ';
 }
 .courseTitle {
   font-family: var(--font-display);
@@ -166,8 +169,8 @@
 .noMedia {
   position: absolute;
   top: 16px;
-  left: 16px;
-  right: 16px;
+  inset-inline-start: 16px;
+  inset-inline-end: 16px;
   text-align: center;
   font-size: 13px;
   color: oklch(1 0 0 / 0.85);
@@ -175,8 +178,8 @@
 .watch {
   position: absolute;
   bottom: 0;
-  left: 0;
-  right: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
   height: 4px;
   background: oklch(1 0 0 / 0.15);
 }
@@ -188,7 +191,7 @@
 .duration {
   position: absolute;
   bottom: 14px;
-  right: 16px;
+  inset-inline-end: 16px;
   font-size: 12px;
   font-weight: 600;
   color: oklch(1 0 0 / 0.8);
@@ -416,7 +419,7 @@
 .qWhen {
   font-size: 11.5px;
   color: var(--tx-muted);
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 .qBody {
   font-size: 13.5px;
@@ -434,7 +437,7 @@
     position: static;
     height: auto;
     width: 100%;
-    border-right: none;
+    border-inline-end: none;
     border-top: 1px solid var(--line);
     order: 2;
   }

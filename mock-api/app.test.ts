@@ -49,6 +49,12 @@ describe('platform', () => {
     expect((await app.request('/platform/v1/domains/resolve?host=nope.localhost', { headers: SERVICE })).status).toBe(404);
     expect((await app.request('/platform/v1/domains/resolve?host=amplify.localhost')).status).toBe(401);
   });
+  it('returns the tenant languages so the proxy can route /<lang>/ URLs', async () => {
+    const res = await app.request('/platform/v1/domains/resolve?host=polyglot.localhost', { headers: SERVICE });
+    const { data } = (await res.json()) as { data: { default_locale: string; locales: string[] } };
+    expect(data.default_locale).toBe('en-US');
+    expect(data.locales).toEqual(['en-US', 'es-ES', 'ar']);
+  });
 });
 
 describe('tenant isolation', () => {

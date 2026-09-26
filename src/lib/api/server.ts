@@ -27,11 +27,27 @@ const DEFAULT_REVALIDATE = 3600;
 interface GetOptions {
   tags?: string[];
   revalidate?: number;
+  /**
+   * Content language. Sent as `?locale=` (part of the cache key, so each language is cached separately) and as
+   * `Accept-Language`. Omitted = the tenant's default language.
+   */
+  locale?: string | undefined;
 }
 
-export async function apiGet<T>(tenant: string, path: string, { tags = [], revalidate = DEFAULT_REVALIDATE }: GetOptions = {}): Promise<T> {
-  const res = await fetch(`${env.API_URL}/api/v1${path}`, {
-    headers: { Accept: 'application/json', Authorization: `Bearer ${env.API_SERVICE_TOKEN}`, 'X-Tenant': tenant },
+export async function apiGet<T>(
+  tenant: string,
+  path: string,
+  { tags = [], revalidate = DEFAULT_REVALIDATE, locale }: GetOptions = {},
+): Promise<T> {
+  const url = new URL(`${env.API_URL}/api/v1${path}`);
+  if (locale) url.searchParams.set('locale', locale);
+  const res = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${env.API_SERVICE_TOKEN}`,
+      'X-Tenant': tenant,
+      ...(locale ? { 'Accept-Language': locale } : {}),
+    },
     next: { revalidate, tags: [cacheTags.tenant(tenant), ...tags] },
   });
   if (!res.ok) throw await ApiError.from(res);

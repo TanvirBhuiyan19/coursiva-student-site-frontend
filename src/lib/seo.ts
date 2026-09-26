@@ -25,33 +25,34 @@ export function organizationJsonLd(site: Site, origin: string): WithContext<Orga
   };
 }
 
-export function websiteJsonLd(site: Site, origin: string): WithContext<WebSite> {
+/** `base` is the site origin plus the locale prefix (`localeBase`), so URLs point at this language's pages. */
+export function websiteJsonLd(site: Site, origin: string, base: string, locale: string): WithContext<WebSite> {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    '@id': `${origin}/#website`,
+    '@id': `${base}/#website`,
     name: site.name,
-    url: origin,
-    inLanguage: site.locale,
+    url: base,
+    inLanguage: locale,
     publisher: { '@id': `${origin}/#organization` },
     potentialAction: {
       '@type': 'SearchAction',
-      target: { '@type': 'EntryPoint', urlTemplate: `${origin}/courses?q={search_term_string}` },
+      target: { '@type': 'EntryPoint', urlTemplate: `${base}/courses?q={search_term_string}` },
       'query-input': 'required name=search_term_string',
     } as unknown as WebSite['potentialAction'],
   };
 }
 
-function courseNode(site: Site, origin: string, c: CourseSummary, detail?: CourseDetail): Course {
-  const url = `${origin}/courses/${c.slug}`;
+function courseNode(site: Site, base: string, locale: string, c: CourseSummary, detail?: CourseDetail): Course {
+  const url = `${base}/courses/${c.slug}`;
   return {
     '@type': 'Course',
     '@id': `${url}#course`,
     name: c.title,
     description: detail?.description ?? c.excerpt,
     url,
-    inLanguage: detail?.language ?? site.locale,
-    provider: { '@type': 'Organization', name: site.name, sameAs: origin },
+    inLanguage: detail?.language ?? locale,
+    provider: { '@type': 'Organization', name: site.name, sameAs: base },
     ...(c.reviewCount > 0
       ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: c.rating, reviewCount: c.reviewCount, bestRating: 5 } }
       : {}),
@@ -87,16 +88,16 @@ function courseNode(site: Site, origin: string, c: CourseSummary, detail?: Cours
   };
 }
 
-export const courseJsonLd = (site: Site, origin: string, c: CourseDetail): WithContext<Course> => ({
+export const courseJsonLd = (site: Site, base: string, locale: string, c: CourseDetail): WithContext<Course> => ({
   '@context': 'https://schema.org',
-  ...courseNode(site, origin, c, c),
+  ...courseNode(site, base, locale, c, c),
 });
 
-export function courseListJsonLd(site: Site, origin: string, courses: CourseSummary[]): WithContext<ItemList> {
+export function courseListJsonLd(site: Site, base: string, locale: string, courses: CourseSummary[]): WithContext<ItemList> {
   return {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    itemListElement: courses.map((c, i) => ({ '@type': 'ListItem', position: i + 1, item: courseNode(site, origin, c) })),
+    itemListElement: courses.map((c, i) => ({ '@type': 'ListItem', position: i + 1, item: courseNode(site, base, locale, c) })),
   };
 }
 

@@ -56,7 +56,7 @@
   color: var(--brand);
 }
 .table tbody th {
-  text-align: left;
+  text-align: start;
   font-weight: 700;
   padding: 12px 20px;
 }

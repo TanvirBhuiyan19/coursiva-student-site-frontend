@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { CourseCard } from '@/features/catalog/components/CourseCard';
 import { CourseCover } from '@/features/catalog/components/CourseCover';

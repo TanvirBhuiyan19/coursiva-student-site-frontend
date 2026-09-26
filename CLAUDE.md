@@ -20,8 +20,8 @@ npm run revalidate   # purge cached tenant data after editing the mock seed (wha
 
 ### Rendering, caching, SEO
 
-- Tenant routes live under `app/[tenant]/`. Get the tenant with `currentTenant()` / `getCurrentSite()` (root params).
-  Route handlers can't use root params — read `params.tenant`.
+- Tenant routes live under `app/[tenant]/[locale]/` (tenant-level files like `sitemap.xml` under `app/[tenant]/`). Get
+  both with `currentScope()` / `getCurrentSite()` (root params). Route handlers can't use root params — read `params`.
 - Every tenant page keeps `generateStaticParams() => []` semantics (inherited from the root layout): rendered on first
   request, cached, revalidated by tag. **Public pages must not read cookies/headers** — that would make them dynamic.
   Pages that must read `searchParams` on the server set `export const dynamic = 'force-dynamic'` (private pages only).
@@ -29,7 +29,8 @@ npm run revalidate   # purge cached tenant data after editing the mock seed (wha
   → document it in `docs/api/README.md` (Laravel must send it to `/hooks/revalidate`).
 - Learner-specific data is fetched in the browser via `features/<f>/api.ts` hooks. Public pages server-render the
   guest state; personal state layers on after hydration (see `CourseCardState`, `BuyBox`).
-- Every indexable page: `generateMetadata` with `alternates.canonical`, a real description, and JSON-LD from
+- Every indexable page: `generateMetadata` with `alternates` from `pageAlternates(path)` (canonical + hreflang), a
+  real description, and JSON-LD from
   `lib/seo.ts` when a schema fits. Private/transactional pages: `robots: { index: false }` and listed in
   `NOINDEX_PREFIXES`/`PRIVATE_PREFIXES` (`lib/routes.ts`). All URLs come from `routes` in `lib/routes.ts`.
 - Metadata file conventions (`icon.tsx`, `opengraph-image.tsx`, `sitemap.ts`) emit `/{tenant}/…` URLs — use route
@@ -58,10 +59,17 @@ npm run revalidate   # purge cached tenant data after editing the mock seed (wha
 - Loading (`skeleton`), error (message + retry) and empty states on every data view.
 - Toasts state the consequence ("Added The Funnel Blueprint to your cart").
 
-### i18n (lint-enforced)
+### i18n — multi-language ready (read `docs/i18n.md`)
 
+- Default language unprefixed, others under `/<lang>/…` (`src/i18n/locales.ts`); the proxy rewrites to
+  `/{tenant}/{locale}/…`. Pass `locale` from `currentScope()` to every `features/<f>/server.ts` read.
 - No literal UI strings in JSX (`i18next/no-literal-string`): add keys to `messages/en.json` (namespaced by feature)
-  and use `useTranslations`/`getTranslations`. Plurals are ICU. Tenant content from the API is not translated.
+  and use `useTranslations`/`getTranslations`. Whole sentences as one ICU message — never concatenate fragments.
+- Links and navigation: `Link`, `useLocalizedRouter`, `useHardNavigate`, `useAppPathname` from `@/i18n/navigation`
+  with locale-less `routes.*` paths — never `next/link` or next/navigation's router for app paths (they'd drop the
+  `/<lang>` prefix).
+- CSS: logical properties only (`margin-inline-start`, `inset-inline-end`, `text-align: start`…); horizontal motion ×
+  `var(--dir-sign)`; directional icons `className="flip-rtl"`. Exceptions: `left: 50%` centring, media controls.
 
 ### Accessibility — WCAG 2.2 AA (axe-gated in e2e)
 

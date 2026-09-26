@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import { Link, useHardNavigate } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useState, type SyntheticEvent } from 'react';
@@ -41,11 +41,12 @@ export function AuthForm({ mode, oauth }: { mode: 'signin' | 'signup'; oauth: 'g
   const pending = login.isPending || register.isPending;
   const strength = passwordStrength(password);
   const { isSignedIn } = useSession();
+  const hardNavigate = useHardNavigate();
 
   // Already signed in (e.g. back button after login): skip the form.
   useEffect(() => {
-    if (isSignedIn && !pending && !login.isSuccess && !register.isSuccess) window.location.replace(next);
-  }, [isSignedIn, pending, next, login.isSuccess, register.isSuccess]);
+    if (isSignedIn && !pending && !login.isSuccess && !register.isSuccess) hardNavigate(next);
+  }, [isSignedIn, pending, next, login.isSuccess, register.isSuccess, hardNavigate]);
 
   const clear = (k: keyof Errors) => setErrors((e) => ({ ...e, [k]: undefined, form: undefined }));
   const onError = (err: unknown) => {
@@ -64,7 +65,7 @@ export function AuthForm({ mode, oauth }: { mode: 'signin' | 'signup'; oauth: 'g
     }
     // Full navigation: the session cookie just changed, and the client router may hold prefetched guest responses
     // (e.g. the proxy redirect from /learning to sign-in). Nothing cached for the guest should survive sign-in.
-    const done = () => window.location.assign(next);
+    const done = () => hardNavigate(next);
     if (isUp) register.mutate({ name: name.trim(), email: email.trim(), password }, { onSuccess: done, onError });
     else login.mutate({ email: email.trim(), password, remember }, { onSuccess: done, onError });
   };

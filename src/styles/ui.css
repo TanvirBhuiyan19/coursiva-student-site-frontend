@@ -7,8 +7,8 @@
 .container {
   max-width: calc(var(--content) + 2 * var(--gutter));
   margin: 0 auto;
-  padding-left: var(--gutter);
-  padding-right: var(--gutter);
+  padding-inline-start: var(--gutter);
+  padding-inline-end: var(--gutter);
 }
 .container-narrow {
   max-width: calc(920px + 2 * var(--gutter));
@@ -144,8 +144,8 @@
     text-align: center;
   }
   .page-head .lead {
-    margin-left: auto;
-    margin-right: auto;
+    margin-inline-start: auto;
+    margin-inline-end: auto;
   }
 }
 
@@ -250,7 +250,7 @@
 .badge-count {
   position: absolute;
   top: -4px;
-  right: -4px;
+  inset-inline-end: -4px;
   min-width: 16px;
   height: 16px;
   border-radius: 99px;
@@ -479,7 +479,7 @@
   background: var(--brand);
 }
 .switch[aria-checked='true']::after {
-  transform: translateX(16px);
+  transform: translateX(calc(16px * var(--dir-sign)));
 }
 @media (forced-colors: active) {
   .switch {

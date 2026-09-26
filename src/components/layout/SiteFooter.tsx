@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import type { Site, SocialNetwork } from '@/features/tenant/types';
 import { routes } from '@/lib/routes';

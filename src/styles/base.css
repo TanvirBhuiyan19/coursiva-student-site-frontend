@@ -5,6 +5,8 @@
 }
 
 html {
+  /* 1 in LTR, -1 in RTL: multiply horizontal transforms by it so motion mirrors with the writing direction. */
+  --dir-sign: 1;
   -webkit-text-size-adjust: 100%;
   scroll-padding-top: calc(var(--header-h) + 12px);
 }
@@ -78,6 +80,15 @@ video {
   border-radius: 4px;
 }
 
+[dir='rtl'] {
+  --dir-sign: -1;
+}
+
+/* Directional icons (chevrons, arrows) point the other way in right-to-left languages. */
+[dir='rtl'] .flip-rtl {
+  transform: scaleX(-1);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -92,7 +103,7 @@ video {
 
 .skip-link {
   position: absolute;
-  left: 12px;
+  inset-inline-start: 12px;
   top: -60px;
   z-index: 1000;
   background: var(--brand);

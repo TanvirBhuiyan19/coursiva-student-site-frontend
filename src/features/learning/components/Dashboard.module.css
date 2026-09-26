@@ -335,7 +335,7 @@
 .doneTag {
   position: absolute;
   top: 10px;
-  right: 10px;
+  inset-inline-end: 10px;
 }
 .myBody {
   padding: 16px;
@@ -399,7 +399,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-left: 8px;
+  margin-inline-start: 8px;
 }
 .x:hover {
   background: var(--hover);
@@ -448,7 +448,7 @@
   color: var(--tx);
 }
 .recPrice {
-  text-align: right;
+  text-align: end;
 }
 .recView {
   display: block;
@@ -467,7 +467,7 @@
   font-size: 13.5px;
 }
 .table th {
-  text-align: left;
+  text-align: start;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.06em;

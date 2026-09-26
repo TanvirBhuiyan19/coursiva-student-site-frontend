@@ -2,6 +2,7 @@
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useState, type SyntheticEvent } from 'react';
 import { useToast } from '@/components/toast/Toaster';
+import { useHardNavigate } from '@/i18n/navigation';
 import { useLogout } from '@/features/auth/api';
 import { ApiError } from '@/lib/api/errors';
 import { routes } from '@/lib/routes';
@@ -30,6 +31,7 @@ function ProfileForms({ profile }: { profile: Profile }) {
   const t = useTranslations('account');
   const f = useFormat();
   const logout = useLogout();
+  const hardNavigate = useHardNavigate();
   return (
     <>
       <DetailsCard profile={profile} />
@@ -86,7 +88,7 @@ function ProfileForms({ profile }: { profile: Profile }) {
           disabled={logout.isPending}
           onClick={() =>
             logout.mutate(undefined, {
-              onSuccess: () => window.location.assign(routes.signIn()),
+              onSuccess: () => hardNavigate(routes.signIn()),
             })
           }
         >

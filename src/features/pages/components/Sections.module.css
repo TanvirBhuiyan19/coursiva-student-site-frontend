@@ -215,7 +215,7 @@
 .videoCap {
   position: absolute;
   bottom: 14px;
-  left: 16px;
+  inset-inline-start: 16px;
   color: oklch(1 0 0 / 0.85);
   font-size: 12.5px;
   font-weight: 600;
@@ -410,7 +410,7 @@
   }
   .person {
     justify-content: center;
-    text-align: left;
+    text-align: start;
   }
   .section {
     padding-bottom: 44px;
@@ -440,7 +440,7 @@
   }
   .quoteBy {
     justify-content: center;
-    text-align: left;
+    text-align: start;
   }
   .value {
     flex-direction: column;

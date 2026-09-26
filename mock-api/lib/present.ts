@@ -82,7 +82,7 @@ export function courseDetail(t: TenantData, c: CourseRow): CourseDetail {
       .filter((x) => x.id !== c.id)
       .slice(0, 3)
       .map((x) => courseSummary(t, x)),
-    language: t.site.locale,
+    language: t.site.defaultLocale,
     publishedAt: c.publishedAt,
   };
 }

@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
 import { Icon } from '@/components/icons';
@@ -421,7 +421,7 @@ export function Dashboard({ organizer, showCertificates }: { organizer: string; 
                       <td className={styles.strong}>{p.title}</td>
                       <td>{f.date(p.createdAt)}</td>
                       <td className={styles.strong}>{f.money(p.total)}</td>
-                      <td style={{ textAlign: 'right' }}>
+                      <td style={{ textAlign: 'end' }}>
                         <Link href={routes.invoice(p.orderId)} aria-label={t('invoiceFor', { title: p.title })} className={styles.invLink}>
                           {t('invoice')}
                         </Link>

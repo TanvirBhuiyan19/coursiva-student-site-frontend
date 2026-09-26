@@ -1,6 +1,5 @@
 'use client';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link, useLocalizedRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/components/toast/Toaster';
 import { CourseCover } from '@/features/catalog/components/CourseCover';
@@ -14,7 +13,7 @@ export function WishlistView() {
   const tc = useTranslations('common');
   const f = useFormat();
   const toast = useToast();
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const { data, isPending } = useWishlist();
   const add = useAddToCart();
   const toggle = useToggleWishlist();

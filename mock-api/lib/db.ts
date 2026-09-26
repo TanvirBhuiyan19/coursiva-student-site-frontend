@@ -2,13 +2,14 @@ import type { Context, MiddlewareHandler } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { amplify } from '../seed/amplify';
 import { northwind } from '../seed/northwind';
+import { polyglot } from '../seed/polyglot';
 import type { TenantData, UserRow } from './records';
 
 /**
  * In-memory "database", one isolated dataset per tenant (row-level isolation: every route reads through `tenantOf`).
  * State lives for the life of the process; `POST /__mock/reset` restores the seed (used by e2e tests).
  */
-const seeds: Record<string, () => TenantData> = { amplify, northwind };
+const seeds: Record<string, () => TenantData> = { amplify, northwind, polyglot };
 let tenants = new Map<string, TenantData>();
 export const sessions = new Map<string, { tenant: string; userId: string }>();
 

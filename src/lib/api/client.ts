@@ -27,7 +27,12 @@ async function ensureCsrf() {
 async function request<T>(method: string, path: string, body?: unknown, retried = false): Promise<T> {
   const mutating = method !== 'GET';
   if (mutating) await ensureCsrf();
-  const headers: Record<string, string> = { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+    // The page language (<html lang>, set from the URL): learner data such as notifications comes back translated.
+    'Accept-Language': document.documentElement.lang || 'en',
+  };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   const token = xsrfToken();
   if (mutating && token) headers['X-XSRF-TOKEN'] = token;

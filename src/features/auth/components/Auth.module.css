@@ -84,7 +84,7 @@
   text-align: center;
 }
 .narrow .form {
-  text-align: left;
+  text-align: start;
 }
 .title {
   font-size: 24px;
@@ -176,6 +176,9 @@
 }
 .backLink::before {
   content: '← ';
+}
+:global([dir='rtl']) .backLink::before {
+  content: '→ ';
 }
 
 @media (max-width: 1023px) {

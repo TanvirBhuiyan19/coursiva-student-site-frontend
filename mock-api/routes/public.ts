@@ -85,7 +85,7 @@ publicRoutes.get('/pages/:slug', (c: AppContext) => {
       title: 'Learn from someone who’s done it',
       instructor: { ...person(t.instructor.name, t.instructor.color), role: t.instructor.role, bio: t.instructor.bio },
       stats: [
-        { value: t.instructor.studentCount.toLocaleString(t.site.locale), label: 'students taught' },
+        { value: t.instructor.studentCount.toLocaleString(t.site.defaultLocale), label: 'students taught' },
         { value: `${avgRating(t)}★`, label: 'avg course rating' },
         { value: String(certificatesIssued), label: 'certificates issued' },
       ],

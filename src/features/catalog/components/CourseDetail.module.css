@@ -46,6 +46,9 @@
   content: '›';
   color: var(--brand-deep-text);
 }
+:global([dir='rtl']) .crumbs li + li::before {
+  content: '‹';
+}
 .crumbs a {
   color: var(--brand-deep-text);
 }
@@ -205,8 +208,8 @@
 }
 .mediaLabel {
   position: absolute;
-  left: 0;
-  right: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
   bottom: 14px;
   text-align: center;
   font-size: 14px;
@@ -494,6 +497,9 @@
   transition: transform 0.15s;
   flex-shrink: 0;
 }
+:global([dir='rtl']) .chev {
+  transform: scaleX(-1);
+}
 .module[open] .chev {
   transform: rotate(90deg);
 }
@@ -556,7 +562,7 @@
 }
 .bullets li {
   position: relative;
-  padding-left: 18px;
+  padding-inline-start: 18px;
   font-size: 14.5px;
   line-height: 1.55;
   color: var(--tx2);
@@ -564,7 +570,7 @@
 .bullets li::before {
   content: '';
   position: absolute;
-  left: 2px;
+  inset-inline-start: 2px;
   top: 0.62em;
   width: 6px;
   height: 6px;
@@ -670,7 +676,7 @@
 }
 .distPct {
   width: 36px;
-  text-align: right;
+  text-align: end;
   font-weight: 600;
 }
 .reviews {
@@ -860,8 +866,8 @@
   .mobileBar {
     display: flex;
     position: fixed;
-    left: 0;
-    right: 0;
+    inset-inline-start: 0;
+    inset-inline-end: 0;
     bottom: 0;
     z-index: 150;
     align-items: center;
@@ -933,7 +939,7 @@
     gap: 28px;
   }
   .lesson {
-    padding-left: 18px;
+    padding-inline-start: 18px;
   }
   .revSummary {
     flex-direction: column;

@@ -51,7 +51,7 @@
   line-height: 1.55;
 }
 .features {
-  text-align: left;
+  text-align: start;
   margin-top: 16px;
   display: flex;
   flex-direction: column;

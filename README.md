@@ -13,7 +13,8 @@ npm run dev        # mock API on :8787 + Next.js on :3000
 ```
 
 Open **http://amplify.localhost:3000** (the design's tenant) or **http://northwind.localhost:3000** (a second tenant:
-Emerald theme, en-GB, GBP, no community/membership, white-label). Sign in as `jordan.tate@gmail.com` / `password`.
+Emerald theme, en-GB, GBP, no community/membership, white-label). `polyglot.localhost:3000` is a test tenant with
+three languages (`/`, `/es`, `/ar` — Arabic is right-to-left); its Spanish/Arabic UI copy isn't translated yet. Sign in as `jordan.tate@gmail.com` / `password`.
 Chrome, Edge and Firefox resolve `*.localhost` to your machine; plain `localhost:3000` serves Amplify.
 
 Test payment cards: `4242 4242 4242 4242` succeeds, `4000 0000 0000 0002` is declined; coupon `LAUNCH20` takes 20% off.
@@ -32,6 +33,7 @@ Test payment cards: `4242 4242 4242 4242` succeeds, `4000 0000 0000 0002` is dec
 
 - [docs/architecture.md](docs/architecture.md) — multi-tenancy, rendering & caching, SEO, auth, deployment
 - [docs/api/](docs/api/README.md) — the API contract the Laravel backend implements
+- [docs/i18n.md](docs/i18n.md) — multi-language: URLs, hreflang, RTL, adding a language
 - [CLAUDE.md](CLAUDE.md) — conventions for contributors
 
 ## Stack

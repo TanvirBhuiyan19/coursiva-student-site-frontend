@@ -1,7 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/config/env';
 import { isBareDevHost, isNoindexHost, resolveTenant } from '@/features/tenant/resolve';
+import { splitLocale } from '@/i18n/locales';
 import { isPrivatePath, routes } from '@/lib/routes';
+
+const TENANT_FILES = new Set(['/sitemap.xml', '/robots.txt', '/icon.png']);
 
 /**
  * Every request to the learner site passes through here:
@@ -10,7 +13,8 @@ import { isPrivatePath, routes } from '@/lib/routes';
  *  3. `/api/*` and `/sanctum/*` stream to Laravel with the tenant attached, so the session cookie stays first-party
  *     on the tenant's own domain (a Backend-for-Frontend proxy — the browser never talks to the API host).
  *  4. Guests hitting account pages go to sign-in (optimistic; the API is the real gate).
- *  5. Everything else is rewritten to `/{tenant}/…`, the app's root segment.
+ *  5. The language comes from the URL prefix (`/es/…`, none for the default locale — see src/i18n/locales.ts).
+ *  6. Everything else is rewritten to `/{tenant}/{locale}/…`, the app's root segments.
  */
 export async function proxy(req: NextRequest) {
   // Only the Host header decides the tenant. A client-supplied X-Forwarded-Host must not, or one tenant's pages could
@@ -42,11 +46,20 @@ export async function proxy(req: NextRequest) {
     return NextResponse.rewrite(new URL(`${pathname}${search}`, env.API_URL), { request: { headers } });
   }
 
-  if (isPrivatePath(pathname) && !req.cookies.has('coursiva_session')) {
-    return NextResponse.redirect(new URL(routes.signIn(`${pathname}${search}`), req.url));
+  // Tenant-level files (one per host, not per language).
+  if (TENANT_FILES.has(pathname)) return NextResponse.rewrite(new URL(`/${tenant.tenant}${pathname}${search}`, req.url));
+
+  // Language: `/es/courses` → locale es-ES, path /courses. The default locale is unprefixed; `/en/…` redirects to it.
+  const { locale, prefix, rest, defaultPrefixed } = splitLocale(tenant, pathname);
+  if (defaultPrefixed) return NextResponse.redirect(new URL(`${rest}${search}`, req.url), 308);
+
+  if (isPrivatePath(rest) && !req.cookies.has('coursiva_session')) {
+    // `next` is a locale-less app path; the sign-in page stays in the visitor's language.
+    return NextResponse.redirect(new URL(`${prefix}${routes.signIn(`${rest}${search}`)}`, req.url));
   }
 
-  const res = NextResponse.rewrite(new URL(`/${tenant.tenant}${pathname === '/' ? '' : pathname}${search}`, req.url));
+  const res = NextResponse.rewrite(new URL(`/${tenant.tenant}/${locale}${rest === '/' ? '' : rest}${search}`, req.url));
+  res.headers.set('Content-Language', locale);
   if (!tenant.indexable || isNoindexHost(host)) res.headers.set('X-Robots-Tag', 'noindex, nofollow');
   return res;
 }

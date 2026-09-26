@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { Icon, type IconName } from '@/components/icons';
 import { Rating } from '@/components/Rating';

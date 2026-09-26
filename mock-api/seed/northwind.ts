@@ -94,7 +94,14 @@ export function northwind(): TenantData {
   const base = amplify();
   return {
     ...base,
-    resolution: { tenant: 'northwind', primaryHost: 'northwind.localhost', status: 'active', indexable: true },
+    resolution: {
+      tenant: 'northwind',
+      primaryHost: 'northwind.localhost',
+      status: 'active',
+      indexable: true,
+      defaultLocale: 'en-GB',
+      locales: ['en-GB'],
+    },
     site: {
       slug: 'northwind',
       name: 'Northwind Yoga',
@@ -103,7 +110,8 @@ export function northwind(): TenantData {
       logoUrl: null,
       whiteLabel: true,
       brand: { hue: 158, chroma: 0.14 },
-      locale: 'en-GB',
+      defaultLocale: 'en-GB',
+      locales: ['en-GB'],
       currency: 'GBP',
       primaryHost: 'northwind.localhost',
       supportEmail: 'hello@northwindyoga.co.uk',

@@ -1,5 +1,6 @@
 .drawer {
-  margin: 0 0 0 auto;
+  margin: 0;
+  margin-inline-start: auto; /* opens from the end edge: right in LTR, left in RTL */
   height: 100dvh;
   max-height: 100dvh;
   width: min(340px, 88vw);
@@ -15,7 +16,7 @@
 }
 @keyframes slide {
   from {
-    transform: translateX(24px);
+    transform: translateX(calc(24px * var(--dir-sign)));
     opacity: 0;
   }
 }

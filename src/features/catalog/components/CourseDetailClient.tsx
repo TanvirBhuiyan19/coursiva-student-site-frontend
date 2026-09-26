@@ -1,6 +1,5 @@
 'use client';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link, useLocalizedRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Icon, type IconName } from '@/components/icons';
@@ -194,7 +193,7 @@ export function PurchaseCard({ course, includes }: { course: CourseDetail; inclu
 function BuyBox({ course }: { course: CourseDetail }) {
   const t = useTranslations('course');
   const f = useFormat();
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const toast = useToast();
   const { isSignedIn } = useSession();
   const enrollment = useEnrollmentFor(course.slug);

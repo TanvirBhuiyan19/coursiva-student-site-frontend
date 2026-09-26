@@ -1,6 +1,6 @@
 'use client';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Link, useLocalizedRouter } from '@/i18n/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState, type SyntheticEvent } from 'react';
 import { useToast } from '@/components/toast/Toaster';
@@ -19,7 +19,7 @@ import { VideoPlayer } from './VideoPlayer';
 export function Player({ courseSlug, lessonId }: { courseSlug: string; lessonId: string | null }) {
   const t = useTranslations('player');
   const tc = useTranslations('common');
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const welcome = useSearchParams().get('welcome') === '1';
   const course = usePlayerCourse(courseSlug);
   const lesson = useLesson(lessonId);
@@ -140,7 +140,7 @@ function Sidebar({ course, currentId }: { course: PlayerCourse; currentId: strin
 function LessonView({ lesson, course }: { lesson: Lesson; course: PlayerCourse }) {
   const t = useTranslations('player');
   const f = useFormat();
-  const router = useRouter();
+  const router = useLocalizedRouter();
   const toast = useToast();
   const toggle = useToggleComplete(course.slug);
   const next = () => router.push(lesson.nextLessonId ? routes.player(course.slug, lesson.nextLessonId) : routes.learning);
