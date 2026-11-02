@@ -47,6 +47,12 @@
   color: var(--tx3);
   margin-top: 2px;
 }
+.notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
 .prefs {
   display: flex;
   flex-direction: column;
@@ -87,4 +93,103 @@
   .row {
     flex-wrap: wrap;
   }
+}
+
+/* Survey dialog (/account?survey={id}). */
+.dialog {
+  width: min(520px, calc(100vw - 32px));
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-pop);
+}
+.dialog::backdrop {
+  background: oklch(0.2 0.02 275 / 0.45);
+}
+.dialogForm {
+  display: grid;
+  gap: 14px;
+  margin-top: 12px;
+}
+.scores {
+  display: grid;
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+  gap: 4px;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  border: 1px solid var(--line-input);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.score:has(input:checked) {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+  color: var(--brand);
+}
+.score:has(input:focus-visible) {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.downloads {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Subscriptions and the cancel flow (/account/billing). */
+.subscriptions {
+  display: grid;
+  gap: 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.reasons {
+  display: grid;
+  gap: 8px;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.reason {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--line-input);
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.reason:has(input:checked) {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+}
+.offers {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.offerCard {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  padding: 14px;
+  border: 1px solid var(--line-input);
+  border-radius: var(--radius-lg);
 }

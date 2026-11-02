@@ -56,6 +56,14 @@ test('robots.txt and sitemap.xml are per tenant', async ({ request }) => {
   expect(sitemap).not.toContain('/membership');
 });
 
+test('the sitemap lists public site-builder pages, never password or members-only ones', async ({ request }) => {
+  const sitemap = await (await hostGet(request, 'amplify.localhost:3100', '/sitemap.xml')).text();
+  expect(sitemap).toContain(tenantUrl('amplify', '/about'));
+  expect(sitemap).toContain(tenantUrl('amplify', '/about/team'));
+  expect(sitemap).not.toContain('/vip');
+  expect(sitemap).not.toContain('/members<');
+});
+
 test('account and transactional pages are noindex', async ({ page }) => {
   for (const path of ['/sign-in', '/cart']) {
     await page.goto(path);

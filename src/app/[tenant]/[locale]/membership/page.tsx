@@ -6,7 +6,8 @@ import { MembershipView } from '@/features/membership/components/MembershipView'
 import { getMembership } from '@/features/membership/server';
 import { currentScope, getSite, localeBase, pageAlternates } from '@/features/tenant/server';
 import { routes } from '@/lib/routes';
-import { breadcrumbJsonLd, faqJsonLd, metaDescription } from '@/lib/seo';
+import { breadcrumbJsonLd, faqJsonLd, metaDescription, siteOpenGraph } from '@/lib/seo';
+import { withSeo } from '@/features/seo/server';
 
 export async function generateMetadata(): Promise<Metadata> {
   const { tenant, locale } = await currentScope();
@@ -19,7 +20,12 @@ export async function generateMetadata(): Promise<Metadata> {
   if (!m) return {};
   const title = t('metaTitle');
   const description = metaDescription(`${m.subtitle} ${t('metaSuffix', { name: site.name })}`);
-  return { title, description, alternates, openGraph: { url, title, description } };
+  return withSeo(routes.membership, {
+    title,
+    description,
+    alternates,
+    openGraph: { ...siteOpenGraph(site, locale), url, title, description },
+  });
 }
 
 export default async function MembershipPage() {

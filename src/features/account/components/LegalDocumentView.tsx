@@ -22,8 +22,8 @@ export function LegalDocumentView({ doc }: { doc: LegalDocument }) {
       <p className={styles.updated}>
         {t('updated')} <time dateTime={doc.updatedAt}>{f.date(doc.updatedAt)}</time>
       </p>
-      {doc.sections.map((s) => (
-        <section key={s.heading} className={styles.legalSection}>
+      {doc.sections.map((s, i) => (
+        <section key={i} className={styles.legalSection}>
           <h2>{s.heading}</h2>
           <p>{s.body}</p>
         </section>

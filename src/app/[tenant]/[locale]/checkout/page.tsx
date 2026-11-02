@@ -18,15 +18,20 @@ export const dynamic = 'force-dynamic';
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
-/** What's being bought comes from the URL: ?course= (&payment=installments), ?cart=1, ?bundle=, or ?plan=&interval=. Prices come from the API. */
+/** What's being bought comes from the URL: ?course= (&payment=installments), ?cart=1, ?bundle=, ?product=, ?plan=&interval=, or
+ * ?live= (&series=1, a live class ticket). Prices come from the API. */
 export default async function CheckoutPage({ searchParams }: PageProps<'/[tenant]/[locale]/checkout'>) {
   const sp = await searchParams;
   const course = one(sp.course);
   const bundle = one(sp.bundle);
+  const product = one(sp.product);
   const plan = one(sp.plan);
+  const live = one(sp.live);
   let target: CheckoutTarget | null = null;
   if (course) target = { kind: 'course', courseSlug: course };
   else if (bundle) target = { kind: 'bundle', bundleSlug: bundle };
+  else if (product) target = { kind: 'product', productSlug: product };
+  else if (live) target = { kind: 'live', liveSessionId: live, series: one(sp.series) === '1' };
   else if (plan) target = { kind: 'membership', planId: plan, interval: one(sp.interval) === 'year' ? 'year' : 'month' };
   else if (one(sp.cart)) target = { kind: 'cart' };
   if (!target) redirect(localizePath(await getCurrentSite(), (await currentScope()).locale, routes.cart));

@@ -1,0 +1,130 @@
+.panel {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  background: var(--surface);
+}
+@media (max-width: 719px) {
+  .panel {
+    grid-template-columns: 1fr;
+  }
+}
+.threads {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.threadList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.threadBtn {
+  width: 100%;
+  text-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: none;
+}
+.threadBtn:hover {
+  background: var(--hover);
+}
+.threadBtn[aria-current='true'] {
+  border-color: var(--line-strong);
+  background: var(--surface-soft);
+}
+.threadTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tx-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.threadStatus {
+  font-size: 11.5px;
+  color: var(--tx-muted);
+}
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.intro,
+.disclaimer {
+  font-size: 13px;
+  color: var(--tx-muted);
+  margin: 0;
+}
+.messages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.message {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  max-width: 92%;
+}
+.message[data-role='student'] {
+  align-self: flex-end;
+  background: var(--brand-tint);
+}
+.who {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tx-muted);
+}
+.text {
+  margin: 4px 0 0;
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+.when {
+  font-size: 11px;
+  color: var(--tx-muted);
+}
+.handoff {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--line-strong);
+  font-size: 13.5px;
+}
+.handoff p {
+  margin: 0;
+}
+.handoff textarea {
+  width: 100%;
+}
+.compose {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+.compose textarea {
+  flex: 1;
+}

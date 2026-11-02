@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useDeferredValue, useId, type ReactNode } from 'react';
 import { Icon } from '@/components/icons';
 import type { Money } from '@/lib/api/types';
+import { markdownToPlain } from '@/lib/markdown';
 import { routes } from '@/lib/routes';
 import { useFormat } from '@/lib/useFormat';
 import type { Catalog, CourseSummary } from '../types';
@@ -35,8 +36,8 @@ export function filterCourses(courses: CourseSummary[], s: Pick<CatalogState, 'q
   return courses
     .filter(
       (c) =>
-        (!s.category || c.category.slug === s.category) &&
-        (!q || c.title.toLowerCase().includes(q) || c.category.name.toLowerCase().includes(q)),
+        (!s.category || c.category?.slug === s.category) &&
+        (!q || c.title.toLowerCase().includes(q) || (c.category?.name.toLowerCase().includes(q) ?? false)),
     )
     .sort(sorters[s.sort]);
 }
@@ -210,7 +211,7 @@ export function CatalogView({
             </p>
           </div>
           <Link href={routes.course(spotlight.slug)} className="btn btn-primary btn-lg">
-            {t('viewCoursePrice', { price: f.money(spotlight.price) })}
+            {t('viewCoursePrice', { price: f.coursePrice(spotlight.price, spotlight.pricing) })}
           </Link>
         </div>
       )}
@@ -226,7 +227,7 @@ export function CatalogView({
             <h2 id={`bundle-${b.slug}`} className={styles.bundleTitle}>
               {b.title}
             </h2>
-            <p className={styles.bundleDesc}>{b.description}</p>
+            <p className={styles.bundleDesc}>{markdownToPlain(b.description)}</p>
           </div>
           <div className={styles.bundlePrice}>
             <p className={styles.compare}>

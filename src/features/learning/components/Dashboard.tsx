@@ -12,6 +12,8 @@ import { useFormat } from '@/lib/useFormat';
 import { useDashboard, useEnrollments, useSetWeeklyGoal } from '../api';
 import type { Enrollment } from '../types';
 import styles from './Dashboard.module.css';
+import type { Organizer } from '../calendar';
+import { UpcomingLive } from '@/features/live/components/UpcomingLive';
 import { LiveBanner } from './LiveBanner';
 
 type Filter = 'all' | 'progress' | 'completed';
@@ -20,7 +22,7 @@ const FILTERS: Filter[] = ['all', 'progress', 'completed'];
 const ACHIEVEMENT_GLYPH = { streak: '★', certificate: '✦', lessons: '▶' } as const;
 
 /** "My learning" — the signed-in home. Every number here comes from the API (dashboard + enrolments). */
-export function Dashboard({ organizer, showCertificates }: { organizer: string; showCertificates: boolean }) {
+export function Dashboard({ organizer, showCertificates }: { organizer: Organizer; showCertificates: boolean }) {
   const t = useTranslations('learning');
   const tc = useTranslations('common');
   const f = useFormat();
@@ -267,6 +269,8 @@ export function Dashboard({ organizer, showCertificates }: { organizer: string; 
               </section>
             </div>
 
+            <UpcomingLive className={styles.block} />
+
             <section aria-labelledby="mine-t" className={styles.block}>
               <div className={styles.blockHead}>
                 <h2 id="mine-t" className="h2" style={{ fontSize: 22 }}>
@@ -302,7 +306,7 @@ export function Dashboard({ organizer, showCertificates }: { organizer: string; 
                   <span className={styles.swatch} style={{ background: c.cover.color }} aria-hidden="true" />
                   <Link href={routes.course(c.slug)} className={styles.savedText}>
                     <span className={styles.savedTitle}>{c.title}</span>
-                    <span className={styles.savedPrice}>{f.money(c.price)}</span>
+                    <span className={styles.savedPrice}>{f.coursePrice(c.price, c.pricing)}</span>
                   </Link>
                   <button
                     type="button"
@@ -431,6 +435,9 @@ export function Dashboard({ organizer, showCertificates }: { organizer: string; 
                 </tbody>
               </table>
             </div>
+            <p style={{ marginTop: 12 }}>
+              <Link href={routes.accountOrders}>{t('allOrders')}</Link>
+            </p>
           </section>
         )}
       </div>

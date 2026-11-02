@@ -16,6 +16,21 @@ export function formatMoney(m: Money, locale: string): string {
   }).format(major);
 }
 
+/**
+ * A typed money amount (`25`, `25.5`, `1,299.50`) → minor units, or null when it isn't one (negative, more than two
+ * decimals, letters). Input handling only: the API prices and validates it.
+ */
+export function parseMoneyInput(text: string): number | null {
+  const clean = text.replace(/[\s,]/g, '');
+  if (!/^\d+(\.\d{1,2})?$/.test(clean)) return null;
+  return Math.round(Number(clean) * 100);
+}
+
+/** Minor units → the plain amount a money field shows (`2500` → `25`, `2550` → `25.50`). */
+export function toMoneyInput(m: Money): string {
+  return m.amount % 100 === 0 ? String(m.amount / 100) : (m.amount / 100).toFixed(2);
+}
+
 export const formatNumber = (n: number, locale: string) => new Intl.NumberFormat(locale).format(n);
 
 /** Lesson length as the player shows it: `4:12`, `1:02:05`. */
@@ -32,6 +47,34 @@ export const splitMinutes = (minutes: number) => ({ h: Math.floor(minutes / 60),
 /** `Aug 12, 2026` in the tenant locale (UTC, so server and client agree). */
 export const formatDate = (iso: string, locale: string) =>
   new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(iso));
+
+/**
+ * `Oct 23, 2026, 11:59 PM` in the viewer's own time zone — for deadlines, which are instants. Only used in client-only
+ * views (learner pages render after hydration), so there is no server/client mismatch.
+ */
+export const formatDateTime = (iso: string, locale: string) =>
+  new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso));
+
+/**
+ * `Nov 10, 2026, 9:00 AM PST` in the school's time zone (`site.timeZone`) — lesson unlock times and live sessions,
+ * which the school schedules in its own zone. Without one, the viewer's zone (no zone name, like `formatDateTime`).
+ */
+export const formatSchoolDateTime = (iso: string, locale: string, timeZone: string | null) =>
+  timeZone
+    ? new Intl.DateTimeFormat(locale, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZone,
+        timeZoneName: 'short',
+      }).format(new Date(iso))
+    : formatDateTime(iso, locale);
+
+/** `Friday` for a weekday number (0 = Sunday). */
+export const formatWeekday = (day: number, locale: string) =>
+  new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2026, 1, 1 + (((day % 7) + 7) % 7))));
 
 /** `1.2 MB` */
 export function formatBytes(bytes: number, locale: string): string {

@@ -28,6 +28,18 @@ export const unauthorized = (c: Context): Response => c.json({ message: 'Unauthe
 export const forbidden = (c: Context, message = 'This action is unauthorized.'): Response => c.json({ message }, 403);
 export const notFound = (c: Context, what = 'Resource'): Response => c.json({ message: `${what} not found.` }, 404);
 
+/**
+ * Laravel's ApiException body: `{ message, code, …details }` (e.g. `409 { code: "conflict", reason: "tutor_resting" }`).
+ * `details` keys are snake_case already.
+ */
+export const apiError = (
+  c: Context,
+  status: 401 | 403 | 404 | 409 | 422 | 429,
+  message: string,
+  code: string,
+  details: Record<string, string> = {},
+): Response => c.json({ message, code, ...details }, status);
+
 /** Parse a JSON body into camelCase. Returns {} for empty/invalid bodies — validation happens per route. */
 export async function body<T extends object>(c: Context): Promise<Partial<T>> {
   try {

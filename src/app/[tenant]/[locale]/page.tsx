@@ -1,34 +1,23 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { Sections } from '@/features/pages/components/Sections';
-import { getPage } from '@/features/pages/server';
-import { currentScope, getSite, localeBase, pageAlternates, siteOrigin } from '@/features/tenant/server';
-import { routes } from '@/lib/routes';
+import { BuilderPage, builderPageMetadata } from '@/features/pages/components/BuilderPage';
+import { currentScope, getSite, localeBase, siteOrigin } from '@/features/tenant/server';
 import { organizationJsonLd, websiteJsonLd } from '@/lib/seo';
 
-export async function generateMetadata(): Promise<Metadata> {
-  const { tenant, locale } = await currentScope();
-  const [site, page, { alternates, url }] = await Promise.all([
-    getSite(tenant, locale),
-    getPage(tenant, 'home', locale),
-    pageAlternates(routes.home),
-  ]);
-  const title = page?.seo.title ?? site.seo.title;
-  const description = page?.seo.description ?? site.seo.description;
-  return { title: { absolute: title }, description, alternates, openGraph: { url, title, description } };
+/** The school's home page: the site builder's `/` page. */
+export function generateMetadata(): Promise<Metadata> {
+  return builderPageMetadata('home');
 }
 
 export default async function HomePage() {
   const { tenant, locale } = await currentScope();
-  const [site, page] = await Promise.all([getSite(tenant, locale), getPage(tenant, 'home', locale)]);
-  if (!page) notFound();
+  const site = await getSite(tenant, locale);
   return (
     <>
       <JsonLd
         data={[organizationJsonLd(site, siteOrigin(site)), websiteJsonLd(site, siteOrigin(site), localeBase(site, locale), locale)]}
       />
-      <Sections sections={page.sections} />
+      <BuilderPage slug="home" />
     </>
   );
 }

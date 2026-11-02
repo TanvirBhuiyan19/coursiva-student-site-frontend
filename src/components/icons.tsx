@@ -28,6 +28,9 @@ const paths = {
   share: 'M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13',
   check: 'M5 12l5 5L20 7',
   bars: 'M4 20V14M10 20V8M16 20V4',
+  external: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5',
+  video: 'M3 6h12v12H3zM15 10l6-3v10l-6-3',
+  copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
 } as const;
 
 export type IconName = keyof typeof paths;

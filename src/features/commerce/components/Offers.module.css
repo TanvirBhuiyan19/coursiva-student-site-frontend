@@ -1,0 +1,235 @@
+/* Checkout offers and the thank-you page's one-click offer. Tokens only; logical properties. */
+
+.was {
+  color: var(--tx3);
+  font-weight: 500;
+  margin-inline-end: 6px;
+}
+
+.savings {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ok-fg);
+}
+
+/* Sale / seat tier / trial banner, above the form. */
+.banner {
+  border: 1px solid var(--brand-tint-border);
+  background: var(--brand-tint);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.banner[data-applied='false'] {
+  border-color: var(--line);
+  background: var(--surface-soft);
+}
+.bannerTitle {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--tx);
+}
+.bannerSub {
+  font-size: 13px;
+  color: var(--tx2);
+}
+.timer {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tx2);
+}
+.clock {
+  font-variant-numeric: tabular-nums;
+  color: var(--tx);
+  margin-inline-start: 4px;
+}
+
+/* Team pricing next to the seats picker. */
+.tiers {
+  padding: 0 14px 14px;
+  font-size: 12.5px;
+  color: var(--tx3);
+}
+.tiersTitle {
+  font-weight: 700;
+  color: var(--tx2);
+}
+.tiers ul {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tiers li {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 10px;
+  background: var(--surface);
+}
+.tiers li[data-reached='true'] {
+  border-color: var(--ok-line);
+  background: var(--ok-bg);
+  color: var(--ok-fg);
+  font-weight: 700;
+}
+.tiersNext {
+  margin-top: 6px;
+}
+
+/* Frequently bought together, in the order summary. */
+.cross {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cross:has(input:checked) {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+}
+.crossTitle {
+  font-size: 14px;
+  font-weight: 800;
+}
+.crossSub {
+  font-size: 12.5px;
+  color: var(--tx3);
+}
+.crossItems {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.crossItems li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+}
+.crossCover {
+  width: 56px;
+  flex-shrink: 0;
+}
+.crossName {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+}
+.crossPrice {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* The one-click offer card on the thank-you page. */
+.offer {
+  margin: 24px auto 0;
+  max-width: 600px;
+  text-align: start;
+  border: 2px solid var(--brand);
+  border-radius: 18px;
+  padding: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card-hover);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.offerEyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tx3);
+}
+.offerTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.offerTitle:focus {
+  outline: none;
+}
+.offerTitle:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 4px;
+}
+.offerItem {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.offerCover {
+  width: 96px;
+  flex-shrink: 0;
+}
+.offerItemTitle {
+  font-weight: 700;
+  font-size: 15px;
+}
+.offerItemSub {
+  font-size: 13px;
+  color: var(--tx3);
+}
+.offerFigures {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+.offerFigures > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--tx2);
+}
+.offerFigures dd {
+  margin: 0;
+  font-weight: 700;
+  color: var(--tx);
+}
+.offerTotal {
+  border-top: 1px solid var(--line);
+  padding-top: 10px !important;
+}
+.offerTotal dt,
+.offerTotal dd {
+  font-weight: 800;
+  color: var(--tx);
+  font-size: 16px;
+}
+.offerNote {
+  font-size: 12.5px;
+  color: var(--tx3);
+}
+.offerActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.offerDone {
+  margin: 24px auto 0;
+  max-width: 600px;
+}
+
+@media (max-width: 719px) {
+  .offer {
+    padding: 16px;
+  }
+  .offerActions > * {
+    flex: 1 1 100%;
+  }
+}

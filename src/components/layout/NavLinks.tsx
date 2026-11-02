@@ -20,8 +20,8 @@ export function NavLinks({ items, label }: { items: NavItem[]; label: string }) 
   return (
     <nav className={styles.nav} aria-label={label}>
       <ul>
-        {items.map((item) => (
-          <li key={item.href}>
+        {items.map((item, i) => (
+          <li key={`${i}-${item.href}`}>
             <Link href={item.href} aria-current={isActive(pathname, item) ? 'page' : undefined}>
               {item.label}
             </Link>

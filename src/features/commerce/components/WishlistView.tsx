@@ -3,6 +3,7 @@ import { Link, useLocalizedRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/components/toast/Toaster';
 import { CourseCover } from '@/features/catalog/components/CourseCover';
+import { isCartable } from '@/features/catalog/pricing';
 import { routes } from '@/lib/routes';
 import { useFormat } from '@/lib/useFormat';
 import { useAddToCart, useToggleWishlist, useWishlist } from '../api';
@@ -18,6 +19,8 @@ export function WishlistView() {
   const add = useAddToCart();
   const toggle = useToggleWishlist();
   const items = data ?? [];
+  // Subscription, pay-what-you-want and membership courses sell from their own page, never from the cart.
+  const cartableSlugs = items.filter((i) => isCartable(i.course)).map((i) => i.course.slug);
 
   const moveToCart = async (slugs: string[]) => {
     for (const slug of slugs) {
@@ -38,13 +41,8 @@ export function WishlistView() {
             {t('count', { count: items.length })}
           </p>
         </div>
-        {items.length > 0 && (
-          <button
-            type="button"
-            className="btn btn-primary"
-            disabled={add.isPending}
-            onClick={() => void moveToCart(items.map((i) => i.course.slug))}
-          >
+        {cartableSlugs.length > 0 && (
+          <button type="button" className="btn btn-primary" disabled={add.isPending} onClick={() => void moveToCart(cartableSlugs)}>
             {t('addAll')}
           </button>
         )}
@@ -74,12 +72,18 @@ export function WishlistView() {
                 </p>
               </div>
               <span className="num" style={{ fontSize: 18 }}>
-                {f.money(c.price)}
+                {f.coursePrice(c.price, c.pricing)}
               </span>
               <div className={styles.wishActions}>
-                <button type="button" className="btn btn-primary btn-sm" onClick={() => void moveToCart([c.slug])}>
-                  {t('addToCart')}
-                </button>
+                {isCartable(c) ? (
+                  <button type="button" className="btn btn-primary btn-sm" onClick={() => void moveToCart([c.slug])}>
+                    {t('addToCart')}
+                  </button>
+                ) : (
+                  <Link href={routes.course(c.slug)} className="btn btn-primary btn-sm">
+                    {t('viewCourse')}
+                  </Link>
+                )}
                 <button
                   type="button"
                   className={styles.removeBtn}

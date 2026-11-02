@@ -29,6 +29,16 @@ export interface RegisterInput {
   name: string;
   email: string;
   password: string;
+  /** The group invite link's token (`/join/{token}`): the new account claims a seat in that group. */
+  group?: string;
+}
+
+/** `POST /api/v1/auth/reset-password` — also how an invited learner sets a first password. */
+export interface ResetPasswordInput {
+  email: string;
+  token: string;
+  password: string;
+  passwordConfirmation: string;
 }
 
 export interface ForgotPasswordInput {

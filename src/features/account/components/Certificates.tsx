@@ -10,8 +10,8 @@ import { useCertificates } from '../api';
 import styles from './Certificates.module.css';
 
 /**
- * Earned certificates. Credentials live in the platform registry (verify.coursiva.io), so the verify link keeps working
- * even if this school closes or rebrands.
+ * Earned certificates. Credentials live in the platform registry, so they stay verifiable even if this school closes or
+ * rebrands; the verify link opens the school's own `/verify/{code}` page.
  */
 export function Certificates({ site }: { site: Pick<Site, 'name' | 'logoUrl'> }) {
   const t = useTranslations('certificates');
@@ -91,6 +91,17 @@ export function Certificates({ site }: { site: Pick<Site, 'name' | 'logoUrl'> })
             <a href={c.pdfUrl} className="btn btn-primary btn-sm" download>
               {t('downloadPdf')}
             </a>
+            {/* Open Badges 3.0: the signed credential (.jwt) through the site's /api proxy, and the registry URL wallets fetch. */}
+            {c.credentialUrl && (
+              <a href={c.credentialUrl} className="btn btn-outline btn-sm" download={`certificate-${c.id}.jwt`}>
+                {t('openBadge')}
+              </a>
+            )}
+            {c.credentialPublicUrl && (
+              <a href={c.credentialPublicUrl} target="_blank" rel="noopener noreferrer" className="link-btn">
+                {t('openBadgeLink')}
+              </a>
+            )}
           </div>
         </li>
       ))}

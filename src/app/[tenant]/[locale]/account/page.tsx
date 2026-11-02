@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import { Suspense } from 'react';
 import { ProfileView } from '@/features/account/components/ProfileView';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -12,7 +13,10 @@ export default async function AccountPage() {
   return (
     <div className="container page" style={{ maxWidth: 'calc(760px + 2 * var(--gutter))' }}>
       <h1 className="h1-sm">{t('title')}</h1>
-      <ProfileView />
+      {/* The Discord card reads the link round trip's query string (useSearchParams). */}
+      <Suspense fallback={<div className="skeleton" style={{ height: 520, marginTop: 24 }} />}>
+        <ProfileView />
+      </Suspense>
     </div>
   );
 }

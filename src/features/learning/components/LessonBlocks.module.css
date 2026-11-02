@@ -1,0 +1,483 @@
+/* Lesson content blocks (course builder v2) — under the lesson title, in the player's reading column. */
+.blocks {
+  margin-top: 16px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--tx2);
+  min-width: 0;
+}
+.blocks > * + * {
+  margin-top: 18px;
+}
+.blocks > * + .heading {
+  margin-top: 30px;
+}
+
+.heading {
+  font-family: var(--font-display);
+  color: var(--tx);
+  line-height: 1.3;
+  font-size: 22px;
+}
+.heading[data-level='3'] {
+  font-size: 18px;
+}
+
+/* The API's HTML joins a paragraph's lines (CommonMark soft breaks); authors typed them as line breaks. */
+.text p,
+.calloutBody p {
+  white-space: pre-line;
+}
+
+.callout {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
+  border-inline-start-width: 4px;
+  background: var(--surface-soft);
+  color: var(--tx);
+}
+.callout[data-tone='info'] {
+  border-color: var(--chip-video-fg);
+  background: var(--chip-video-bg);
+}
+.callout[data-tone='tip'] {
+  border-color: var(--brand);
+  background: var(--surface-sunk);
+}
+.callout[data-tone='warning'] {
+  border-color: var(--chip-quiz-fg);
+  background: var(--chip-quiz-bg);
+}
+.callout[data-tone='success'] {
+  border-color: var(--ok-solid);
+  background: var(--ok-bg);
+}
+.calloutIcon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--on-accent);
+  background: var(--tx3);
+  margin-top: 2px;
+}
+.calloutIcon::before {
+  content: 'i';
+}
+.callout[data-tone='tip'] .calloutIcon::before {
+  content: '✦';
+}
+.callout[data-tone='warning'] .calloutIcon::before {
+  content: '!';
+}
+.callout[data-tone='success'] .calloutIcon::before {
+  content: '✓';
+}
+.callout[data-tone='info'] .calloutIcon {
+  background: var(--chip-video-fg);
+}
+.callout[data-tone='tip'] .calloutIcon {
+  background: var(--brand);
+}
+.callout[data-tone='warning'] .calloutIcon {
+  background: var(--chip-quiz-fg);
+}
+.callout[data-tone='success'] .calloutIcon {
+  background: var(--ok-fg);
+}
+.calloutBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.quote {
+  border-inline-start: 3px solid var(--brand);
+  padding-inline-start: 16px;
+}
+.quoteText {
+  color: var(--tx);
+  white-space: pre-line;
+}
+.quote[data-style='large'] {
+  border: none;
+  padding: 8px 0;
+  text-align: center;
+}
+.quote[data-style='large'] .quoteText {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1.35;
+}
+.cite {
+  margin-top: 6px;
+  font-size: 13.5px;
+  color: var(--tx-muted);
+}
+
+.list {
+  padding-inline-start: 1.4em;
+}
+.list[data-style='bullet'] {
+  list-style: disc;
+}
+.list[data-style='numbered'] {
+  list-style: decimal;
+}
+.list[data-style='check'] {
+  list-style: none;
+  padding-inline-start: 0;
+}
+.list[data-style='check'] li {
+  position: relative;
+  padding-inline-start: 28px;
+}
+.list[data-style='check'] li::before {
+  content: '✓';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ok-bg);
+  color: var(--ok-fg);
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.list li + li {
+  margin-top: 0.3em;
+}
+.list li {
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--line-strong);
+  margin-block: 28px;
+}
+
+/* Code */
+.code {
+  border-radius: var(--radius-md);
+  background: var(--toast-bg);
+  color: var(--on-accent);
+  overflow: hidden;
+}
+.codeHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 6px 14px;
+  border-bottom: 1px solid var(--on-dark-line);
+  font-size: 12px;
+}
+.codeLang {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+}
+.copyState {
+  flex: 1;
+  text-align: end;
+  opacity: 0.85;
+}
+.copyBtn {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--on-dark-line);
+  background: var(--on-dark-card);
+  color: var(--on-accent);
+  cursor: pointer;
+}
+.copyBtn:hover {
+  background: oklch(1 0 0 / 0.18);
+}
+.pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13.5px;
+  line-height: 1.55;
+  tab-size: 2;
+  white-space: pre;
+}
+.pre:focus-visible {
+  outline-offset: -3px;
+}
+
+.button {
+  display: flex;
+}
+
+/* Table */
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.table th,
+.table td {
+  padding: 10px 14px;
+  text-align: start;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+  min-width: 120px;
+  white-space: pre-line;
+}
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+.table th {
+  background: var(--surface-soft);
+  color: var(--tx);
+  font-weight: 700;
+}
+
+/* Images */
+.figure {
+  margin-inline: auto;
+}
+.figure .caption {
+  padding-inline: 12px;
+}
+.figure[data-width='normal'] {
+  max-width: 640px;
+}
+.figure[data-width='full'] .img {
+  border-radius: 0;
+}
+/* Full width: edge to edge of the player's main column (its padding is 36px, the gutter below 1024px). */
+.figure[data-width='full'] {
+  width: calc(100% + 72px);
+  margin-inline: -36px;
+}
+@media (max-width: 1023px) {
+  .figure[data-width='full'] {
+    width: calc(100% + 2 * var(--gutter));
+    margin-inline: calc(-1 * var(--gutter));
+  }
+}
+.blocks[data-embedded] .figure[data-width='full'] {
+  width: 100%;
+  margin-inline: 0;
+}
+.img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunk);
+}
+.caption {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--tx-muted);
+  text-align: center;
+}
+
+/* Gallery (carousel) */
+.gallery {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+}
+.slide {
+  margin: 0;
+}
+.slideImg {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+}
+.galleryBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+.galleryCount {
+  font-size: 13px;
+  color: var(--tx-muted);
+}
+.galleryNav {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--tx);
+  font-size: 16px;
+  cursor: pointer;
+}
+.galleryNav:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+.thumbs {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  overflow-x: auto;
+  padding: 3px;
+}
+.thumb {
+  flex-shrink: 0;
+  width: 64px;
+  height: 48px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface-sunk);
+  cursor: pointer;
+  opacity: 0.7;
+}
+.thumb[aria-current='true'] {
+  border-color: var(--brand);
+  opacity: 1;
+}
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.media {
+  max-width: 100%;
+}
+
+.audio {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  background: var(--surface-soft);
+}
+.audio audio {
+  width: 100%;
+  margin-top: 8px;
+}
+.mediaName {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--tx);
+  overflow-wrap: anywhere;
+}
+
+/* PDF + file cards */
+.pdf {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.pdfFrame {
+  display: block;
+  width: 100%;
+  height: min(75vh, 820px);
+  min-height: 480px;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-sunk);
+}
+.fileCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--surface-soft);
+}
+.fileCard[data-standalone] {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+.fileIcon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 48px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--tx3);
+}
+.fileIcon[data-kind='pdf'] {
+  color: var(--file-pdf);
+}
+.fileText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.fileName {
+  font-weight: 700;
+  font-size: 14.5px;
+  color: var(--tx);
+  overflow-wrap: anywhere;
+}
+.fileMeta {
+  font-size: 13px;
+  color: var(--tx-muted);
+  overflow-wrap: anywhere;
+}
+
+/* Embed */
+.embed iframe {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunk);
+}
+
+@media (max-width: 719px) {
+  .heading {
+    font-size: 19px;
+  }
+  .heading[data-level='3'] {
+    font-size: 17px;
+  }
+  .quote[data-style='large'] .quoteText {
+    font-size: 20px;
+  }
+  /* Phones can't show PDFs inline reliably: the card's Open link is the way in. */
+  .pdfFrame {
+    display: none;
+  }
+  .pdf .fileCard,
+  .fileCard[data-standalone] {
+    flex-wrap: wrap;
+  }
+  .embed iframe {
+    max-height: 70vh;
+  }
+}

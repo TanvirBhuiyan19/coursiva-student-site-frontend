@@ -1,0 +1,25 @@
+/* Track F: the paid / members-only session call to action (LiveTicketCta). */
+.cta {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--tx-muted);
+}
+@media (max-width: 719px) {
+  .row > :global(.btn) {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+}

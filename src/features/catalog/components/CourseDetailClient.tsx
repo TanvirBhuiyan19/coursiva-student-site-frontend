@@ -6,15 +6,66 @@ import { Icon, type IconName } from '@/components/icons';
 import { useToast } from '@/components/toast/Toaster';
 import { useSession } from '@/features/auth/api';
 import { useAddToCart, useCart, useToggleWishlist, useWishlist } from '@/features/commerce/api';
-import { useEnrollmentFor, useSubmitReview } from '@/features/learning/api';
+import { useEnrollFree, useEnrollmentFor, useSubmitReview } from '@/features/learning/api';
 import { ApiError } from '@/lib/api/errors';
 import { routes } from '@/lib/routes';
 import { useFormat } from '@/lib/useFormat';
+import { isCartable, isFreeCourse, pricingModel } from '../pricing';
 import type { CourseDetail } from '../types';
 import styles from './CourseDetail.module.css';
 import { CourseCover } from './CourseCover';
+import { CoursePreviewDialog, coverPreviewId, previewItems } from './CoursePreviewModal';
 
 const PURCHASE_CARD_ID = 'purchase-card';
+
+/**
+ * The course's main call to action. Paid courses go to checkout (a subscription subscribes, pay what you want names
+ * a price there); a course that comes with a membership links to the membership plans; free courses enrol in one
+ * click (no checkout, no card): guests sign up first and come back to the course page.
+ */
+export function EnrollCta({ course, className, plan }: { course: CourseDetail; className: string; plan?: 'installments' }) {
+  const t = useTranslations('course');
+  const router = useLocalizedRouter();
+  const toast = useToast();
+  const { isSignedIn } = useSession();
+  const enroll = useEnrollFree();
+  if (pricingModel(course) === 'membership')
+    return (
+      <Link href={routes.membership} className={className}>
+        {t('seeMembership')}
+      </Link>
+    );
+  if (!isFreeCourse(course))
+    return (
+      <Link href={routes.checkoutCourse(course.slug, plan)} className={className}>
+        {pricingModel(course) === 'subscription' ? t('subscribeNow') : t('enrollNow')}
+      </Link>
+    );
+  if (!isSignedIn)
+    return (
+      <Link href={routes.signUp(routes.course(course.slug))} className={className}>
+        {t('enrollFree')}
+      </Link>
+    );
+  return (
+    <button
+      type="button"
+      className={className}
+      disabled={enroll.isPending}
+      onClick={() =>
+        enroll.mutate(course.slug, {
+          onSuccess: (e) => {
+            toast(t('enrolledFree', { title: course.title }));
+            router.push(routes.player(course.slug, e.resumeLesson.id));
+          },
+          onError: (err) => toast(err instanceof ApiError ? err.message : t('enrollFailed')),
+        })
+      }
+    >
+      {t('enrollFree')}
+    </button>
+  );
+}
 
 /* ── Section nav ──────────────────────────────────────────────────────────── */
 
@@ -95,22 +146,42 @@ export function ExpandAll({ targetId }: { targetId: string }) {
 
 /* ── Free preview ─────────────────────────────────────────────────────────── */
 
-/** The free-preview lesson in a modal. `media` renders the card's cover as the trigger; `chip` the curriculum chip. */
-export function PreviewButton({ course, variant }: { course: CourseDetail; variant: 'media' | 'chip' }) {
+/**
+ * Opens the free-preview modal (CoursePreviewModal): `media` renders the card's cover with a play overlay ("Preview
+ * this course", the first free preview); `chip` is a curriculum row's "Preview" for `lessonId`. The modal's content
+ * mounts only while it is open: opening fetches that lesson's signed URLs, closing (button, backdrop or Esc) unmounts
+ * it, which stops playback and drops the URLs.
+ */
+export function PreviewButton({
+  course,
+  variant,
+  lessonId = null,
+}: {
+  course: CourseDetail;
+  variant: 'media' | 'chip';
+  lessonId?: string | null;
+}) {
   const t = useTranslations('course');
   const dialog = useRef<HTMLDialogElement>(null);
-  const titleId = useId();
   const enrolled = useEnrollmentFor(course.slug);
-  const open = () => dialog.current?.showModal();
+  const [isOpen, setIsOpen] = useState(false);
+  const open = () => {
+    dialog.current?.showModal();
+    setIsOpen(true);
+  };
 
   return (
     <>
       {variant === 'chip' ? (
-        <button type="button" className={styles.previewChip} onClick={open}>
-          {t('preview')}
+        <button type="button" className={styles.previewChip} onClick={open} aria-haspopup="dialog">
+          <span className={styles.previewChipIcon} aria-hidden="true">
+            <Icon name="play" size={8} fill="currentColor" />
+          </span>
+          <span className={styles.previewChipText}>{t('preview')}</span>
+          {lessonId && <span className="sr-only"> {course.modules.flatMap((m) => m.lessons).find((l) => l.id === lessonId)?.title}</span>}
         </button>
       ) : (
-        <button type="button" className={styles.mediaBtn} onClick={open} aria-label={t('previewThisCourse')}>
+        <button type="button" className={styles.mediaBtn} onClick={open} aria-haspopup="dialog" aria-label={t('previewThisCourse')}>
           <CourseCover cover={course.cover} height="100%" priority sizes="(max-width: 1023px) 100vw, 400px" />
           <span className={styles.mediaShade} aria-hidden="true" />
           <span className={styles.mediaPlay} aria-hidden="true">
@@ -121,40 +192,15 @@ export function PreviewButton({ course, variant }: { course: CourseDetail; varia
           </span>
         </button>
       )}
-      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- backdrop click; <dialog> handles Esc natively */}
-      <dialog
-        ref={dialog}
-        className={styles.previewDialog}
-        aria-labelledby={titleId}
-        onClick={(e) => {
-          if (e.target === dialog.current) dialog.current.close();
-        }}
-      >
-        <div className={styles.previewHead}>
-          <div>
-            <p className={styles.previewKicker}>{t('coursePreview')}</p>
-            <h2 id={titleId} className={styles.previewTitle}>
-              {course.preview?.title ?? course.title}
-            </h2>
-          </div>
-          <button type="button" className={styles.previewClose} onClick={() => dialog.current?.close()} aria-label={t('closePreview')}>
-            <Icon name="close" size={18} />
-          </button>
-        </div>
-        <div className={styles.previewVideo}>
-          <span className={styles.mediaPlay} aria-hidden="true">
-            <Icon name="play" size={22} fill="currentColor" />
-          </span>
-        </div>
-        <div className={styles.previewFoot}>
-          <span>{t('previewCta', { count: course.lessonCount })}</span>
-          {!enrolled && (
-            <Link href={routes.checkoutCourse(course.slug)} className="btn btn-primary btn-sm">
-              {t('enrollNow')}
-            </Link>
-          )}
-        </div>
-      </dialog>
+      <CoursePreviewDialog
+        course={course}
+        dialogRef={dialog}
+        isOpen={isOpen}
+        initialLessonId={lessonId ?? coverPreviewId(course)}
+        onClose={() => setIsOpen(false)}
+        footer={!enrolled && <EnrollCta course={course} className="btn btn-primary btn-sm" />}
+        enrolCta={!enrolled && <EnrollCta course={course} className="btn btn-white btn-sm" />}
+      />
     </>
   );
 }
@@ -170,7 +216,11 @@ export function PurchaseCard({ course, includes }: { course: CourseDetail; inclu
   return (
     <div className={styles.card} id={PURCHASE_CARD_ID}>
       <div className={styles.media}>
-        {course.preview ? <PreviewButton course={course} variant="media" /> : <CourseCover cover={course.cover} height="100%" priority />}
+        {previewItems(course).length > 0 ? (
+          <PreviewButton course={course} variant="media" />
+        ) : (
+          <CourseCover cover={course.cover} height="100%" priority />
+        )}
       </div>
       <div className={styles.cardBody}>
         <BuyBox course={course} />
@@ -233,6 +283,17 @@ function BuyBox({ course }: { course: CourseDetail }) {
   const saved = !!wishlist?.some((w) => w.course.slug === course.slug);
   const pp = course.paymentPlan;
   const onPlan = plan === 'installments' && !!pp;
+  // Free courses: one click to enrol; subscription, pay-what-you-want and membership courses sell from this page
+  // only. Neither goes in a cart.
+  const noCart = isFreeCourse(course) || !isCartable(course);
+  const priceSub =
+    pricingModel(course) === 'subscription'
+      ? t('subscriptionSub')
+      : pricingModel(course) === 'pay_what_you_want'
+        ? t('pwywSub', { price: f.money(course.price) })
+        : pricingModel(course) === 'membership'
+          ? t('membershipSub')
+          : t('onceSub');
 
   const share = async () => {
     const url = window.location.href.split('#')[0]!;
@@ -249,8 +310,8 @@ function BuyBox({ course }: { course: CourseDetail }) {
   return (
     <>
       <div className={styles.priceRow}>
-        <span className={styles.price}>{onPlan ? f.money(pp.installmentPrice) : f.money(course.price)}</span>
-        <span className={styles.priceSub}>{onPlan ? t('perMonthFor', { count: pp.installments }) : t('onceSub')}</span>
+        <span className={styles.price}>{onPlan ? f.money(pp.installmentPrice) : f.coursePrice(course.price, course.pricing)}</span>
+        <span className={styles.priceSub}>{onPlan ? t('perMonthFor', { count: pp.installments }) : priceSub}</span>
       </div>
       {pp && (
         <div className={styles.planToggle} role="group" aria-label={t('howToPay')}>
@@ -262,13 +323,8 @@ function BuyBox({ course }: { course: CourseDetail }) {
           </button>
         </div>
       )}
-      <Link
-        href={routes.checkoutCourse(course.slug, onPlan ? 'installments' : undefined)}
-        className={`btn btn-primary btn-block btn-lg ${styles.cta}`}
-      >
-        {t('enrollNow')}
-      </Link>
-      {inCart ? (
+      <EnrollCta course={course} plan={onPlan ? 'installments' : undefined} className={`btn btn-primary btn-block btn-lg ${styles.cta}`} />
+      {noCart ? null : inCart ? (
         <Link href={routes.cart} className={`btn btn-block btn-success ${styles.cta2}`}>
           {t('inCart')}
         </Link>
@@ -357,7 +413,8 @@ export function MobileBuyBar({ course }: { course: CourseDetail }) {
             <p className={styles.mobileSub}>{t('percentComplete', { percent: enrollment.progress.percent })}</p>
           ) : (
             <p className={styles.mobileSub}>
-              <b>{f.money(course.price)}</b> · {t('guarantee', { days: course.guaranteeDays })}
+              <b>{f.coursePrice(course.price, course.pricing)}</b>
+              {course.guaranteeDays > 0 && <> · {t('guarantee', { days: course.guaranteeDays })}</>}
             </p>
           )}
         </div>
@@ -366,9 +423,7 @@ export function MobileBuyBar({ course }: { course: CourseDetail }) {
             {enrollment.progress.percent === 100 ? t('reviewCourse') : t('continueLearning')}
           </Link>
         ) : (
-          <Link href={routes.checkoutCourse(course.slug)} className="btn btn-primary">
-            {t('enrollNow')}
-          </Link>
+          <EnrollCta course={course} className="btn btn-primary" />
         )}
       </div>
       <div className={styles.mobileSpace} aria-hidden="true" />

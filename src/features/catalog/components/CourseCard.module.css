@@ -1,4 +1,6 @@
 .card {
+  /* A card reads from the start edge even inside a centred (mobile) marketing section, as in the site builder. */
+  text-align: start;
   position: relative;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -60,6 +62,19 @@
   margin-top: 8px;
   font-size: 12.5px;
   color: var(--tx3);
+}
+/* The instructor's profile link sits above the card's stretched title link. */
+.instructorLink {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+}
+.instructorLink:hover {
+  color: var(--brand-link);
+  text-decoration: underline;
 }
 .meta {
   display: flex;
@@ -129,15 +144,6 @@
 .miniPrice {
   font-weight: 800;
   font-size: 13.5px;
-}
-
-@media (max-width: 719px) {
-  .card[data-variant='featured'] .body {
-    text-align: center;
-  }
-  .card[data-variant='featured'] .meta {
-    justify-content: center;
-  }
 }
 
 /* List view */

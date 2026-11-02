@@ -1,18 +1,23 @@
 /** Community: spaces (with per-learner access), posts, likes, events, leaderboard. */
 import { Hono } from 'hono';
-import type { CommunityOverview, NewPostInput, Post, Space } from '@/features/community/types';
+import { FLAG_REASONS, type CommunityOverview, type NewPostInput, type Post, type Reply, type Space } from '@/features/community/types';
 import { type AppContext, type Env, requireUser } from '../lib/db';
-import { body, forbidden, id, invalid, noContent, notFound, ok, paginate, str } from '../lib/http';
+import { apiError, body, forbidden, id, invalid, noContent, notFound, ok, paginate, str } from '../lib/http';
+import { boughtTicket, findLiveSession, needsTicket, presentLiveItem } from '../lib/liveSchedule';
 import { isEnrolled, person } from '../lib/present';
-import type { PostRow, SpaceRow, TenantData, UserRow } from '../lib/records';
+import type { PostRow, ReplyRow, SpaceRow, TenantData, UserRow } from '../lib/records';
 import { presentEvent } from './learning';
 
 export const communityRoutes = new Hono<Env>();
 
-communityRoutes.use('*', async (c: AppContext, next) => {
+// Scoped to the community paths: this router is mounted on /api/v1 with the others, so '*' would 404 every later
+// route (account, assessments…) on a school without the community.
+const requireCommunity = async (c: AppContext, next: () => Promise<void>) => {
   if (!c.get('t').site.features.community) return notFound(c, 'Community');
   await next();
-});
+};
+communityRoutes.use('/community', requireCommunity);
+communityRoutes.use('/community/*', requireCommunity);
 
 function access(t: TenantData, user: UserRow | null, s: SpaceRow): { locked: boolean; reason: string | null } {
   if (s.access === 'course' && s.courseId && !isEnrolled(t, user, s.courseId)) {
@@ -86,9 +91,51 @@ function presentPost(t: TenantData, user: UserRow | null, p: PostRow): Post {
     body: p.body,
     likes: p.likes + (liked ? 1 : 0),
     liked,
-    replies: p.replies,
+    replies: p.thread?.length ?? p.replies,
+    held: !!p.held,
     createdAt: p.createdAt,
   };
+}
+
+const SEED_REPLIERS = [
+  { name: 'Priya Shah', color: 'oklch(0.5 0.14 160)' },
+  { name: 'Tom Becker', color: 'oklch(0.5 0.15 30)' },
+  { name: 'Lena Ortiz', color: 'oklch(0.5 0.15 220)' },
+];
+const SEED_REPLY_BODIES = ['This helped me a lot, thanks!', 'Same here: the second module made it click.', 'Great point. Saving this.'];
+
+/** The thread of a post; seeded posts get their seeded count of replies (deterministic), oldest first. */
+function thread(p: PostRow): ReplyRow[] {
+  p.thread ??= Array.from({ length: p.replies }, (_, i) => {
+    const who = SEED_REPLIERS[i % SEED_REPLIERS.length]!;
+    return {
+      id: `${p.id}_r${i + 1}`,
+      userId: null,
+      name: who.name,
+      color: who.color,
+      isCoach: false,
+      body: SEED_REPLY_BODIES[i % SEED_REPLY_BODIES.length]!,
+      createdAt: new Date(new Date(p.createdAt).getTime() + (i + 1) * 600_000).toISOString(),
+    };
+  });
+  return p.thread;
+}
+
+const presentReply = (r: ReplyRow): Reply => ({
+  id: r.id,
+  author: { ...person(r.name, r.color), isInstructor: r.isCoach },
+  body: r.body,
+  createdAt: r.createdAt,
+});
+
+/** A published post the visitor can read (404 / 403 otherwise), like the backends' `readable`. */
+function readable(c: AppContext): PostRow | Response {
+  const t = c.get('t');
+  const p = t.posts.find((x) => x.id === c.req.param('id') && !x.held);
+  if (!p) return notFound(c, 'Post');
+  const space = t.spaces.find((s) => s.id === p.spaceId);
+  const a = space ? access(t, c.get('user'), space) : { locked: false, reason: null };
+  return a.locked ? forbidden(c, a.reason ?? undefined) : p;
 }
 
 communityRoutes.get('/community/posts', (c: AppContext) => {
@@ -98,7 +145,7 @@ communityRoutes.get('/community/posts', (c: AppContext) => {
   const space = t.spaces.find((s) => s.id === spaceId);
   if (!space) return notFound(c, 'Space');
   if (access(t, user, space).locked) return forbidden(c, access(t, user, space).reason ?? undefined);
-  const rows = t.posts.filter((p) => spaceId === 'sp_all' || p.spaceId === spaceId);
+  const rows = t.posts.filter((p) => !p.held && (spaceId === 'sp_all' || p.spaceId === spaceId));
   const sorted =
     c.req.query('sort') === 'top'
       ? [...rows].sort((a, b) => b.likes - a.likes)
@@ -119,7 +166,10 @@ communityRoutes.post('/community/posts', requireUser, async (c: AppContext) => {
   if (access(t, user, space).locked) return forbidden(c, access(t, user, space).reason ?? undefined);
   if (text.length < 2) return invalid(c, { body: 'Write something first.' });
   if (text.length > 5000) return invalid(c, { body: 'Posts can be up to 5,000 characters.' });
+  // Laravel Community::holdReason: a link from a member with fewer than 3 published posts waits for a moderator.
+  const held = /https?:\/\/|www\./i.test(text) && t.posts.filter((p) => p.userId === user.id && !p.held).length < 3;
   const row: PostRow = {
+    held,
     id: id('post'),
     spaceId: space.id,
     userId: user.id,
@@ -153,17 +203,81 @@ communityRoutes.delete('/community/posts/:id/like', requireUser, (c: AppContext)
   return ok(c, presentPost(t, user, p));
 });
 
+communityRoutes.get('/community/posts/:id/replies', (c: AppContext) => {
+  const p = readable(c);
+  if (p instanceof Response) return p;
+  return ok(c, thread(p).slice(0, 200).map(presentReply));
+});
+
+communityRoutes.post('/community/posts/:id/replies', requireUser, async (c: AppContext) => {
+  const t = c.get('t');
+  const user = c.get('user')!;
+  const p = readable(c);
+  if (p instanceof Response) return p;
+  const text = str((await body<{ body: string }>(c)).body);
+  if (text.length < 2 || text.length > 5000) return invalid(c, { body: 'Write a reply (5,000 characters max).' });
+  thread(p).push({
+    id: id('rep'),
+    userId: user.id,
+    name: user.name,
+    color: user.color,
+    isCoach: false,
+    body: text,
+    createdAt: new Date().toISOString(),
+  });
+  return ok(c, presentPost(t, user, p), 201);
+});
+
+communityRoutes.post('/community/posts/:id/flags', requireUser, async (c: AppContext) => {
+  const user = c.get('user')!;
+  const p = readable(c);
+  if (p instanceof Response) return p;
+  const reason = str((await body<{ reason?: string }>(c)).reason) || null;
+  if (reason !== null && !(FLAG_REASONS as readonly string[]).includes(reason))
+    return invalid(c, { reason: 'Choose why you’re reporting this post.' });
+  if (p.userId !== user.id) {
+    p.flags ??= [];
+    if (!p.flags.some((f) => f.userId === user.id)) p.flags.push({ userId: user.id, reason });
+    if (p.flags.length >= 3) p.held = true;
+  }
+  return c.json({ data: { flagged: true } }, 202);
+});
+
 communityRoutes.put('/community/events/:id/rsvp', requireUser, (c: AppContext) => {
   const t = c.get('t');
   const user = c.get('user')!;
-  if (c.req.param('id') !== t.event.id) return notFound(c, 'Event');
-  if (!t.rsvps.some((r) => r.userId === user.id && r.eventId === t.event.id)) t.rsvps.push({ userId: user.id, eventId: t.event.id });
-  return ok(c, presentEvent(t, user));
+  const eventId = c.req.param('id') ?? '';
+  // The community event, or another session of the live schedule (mock-api/lib/liveSchedule.ts).
+  const other = eventId === t.event.id ? null : findLiveSession(t, eventId);
+  if (eventId !== t.event.id && (!other || other.endedAt))
+    return other ? apiError(c, 409, 'This session has ended.', 'conflict') : notFound(c, 'Event');
+  // Track F: a paid or members-only session needs a ticket or a membership (Laravel: 402 payment_required).
+  const refused = other ? needsTicket(t, user, other) : null;
+  if (refused)
+    return c.json(
+      {
+        message:
+          refused === 'members_only'
+            ? 'This session is for members. Join a membership that includes it to take part.'
+            : 'Buy a ticket to join this session.',
+        code: 'payment_required',
+        reason: refused,
+      },
+      402,
+    );
+  if (!t.rsvps.some((r) => r.userId === user.id && r.eventId === eventId)) t.rsvps.push({ userId: user.id, eventId });
+  return ok(c, other ? presentLiveItem(t, user, other) : presentEvent(t, user));
 });
 
 communityRoutes.delete('/community/events/:id/rsvp', requireUser, (c: AppContext) => {
   const t = c.get('t');
   const user = c.get('user')!;
+  // Track F: a bought seat isn't dropped by the learner (the school refunds it).
+  if (boughtTicket(t, user, c.req.param('id') ?? ''))
+    return apiError(c, 409, 'You bought a ticket for this session — contact the school to cancel it.', 'conflict', {
+      reason: 'ticket_bought',
+    });
   t.rsvps = t.rsvps.filter((r) => !(r.userId === user.id && r.eventId === c.req.param('id')));
-  return c.req.param('id') === t.event.id ? ok(c, presentEvent(t, user)) : noContent(c);
+  const other = c.req.param('id') === t.event.id ? null : findLiveSession(t, c.req.param('id') ?? '');
+  return c.req.param('id') === t.event.id ? ok(c, presentEvent(t, user)) : other ? ok(c, presentLiveItem(t, user, other)) : noContent(c);
 });

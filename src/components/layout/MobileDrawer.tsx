@@ -3,12 +3,14 @@ import { Link, useAppPathname, useHardNavigate } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef } from 'react';
 import { Icon, type IconName } from '@/components/icons';
-import { useLogout, useSession } from '@/features/auth/api';
+import { signOutRedirect, useLogout, useSession } from '@/features/auth/api';
+import { siteAvailable } from '@/features/tenant/normalize';
 import type { Site } from '@/features/tenant/types';
 import { routes } from '@/lib/routes';
 import { BrandMark } from './BrandMark';
 import styles from './MobileDrawer.module.css';
 import { isActive, type NavItem } from './NavLinks';
+import { avatarBackground, UserAvatar } from './UserAvatar';
 
 /** Tablet/mobile navigation. A native modal <dialog>: focus is trapped, Esc closes, the page behind is inert. */
 export function MobileDrawer({
@@ -16,7 +18,7 @@ export function MobileDrawer({
   navItems,
   onClose,
 }: {
-  site: Pick<Site, 'name' | 'logoUrl' | 'features'>;
+  site: Pick<Site, 'name' | 'logoUrl' | 'features' | 'unavailable'>;
   navItems: NavItem[];
   onClose: () => void;
 }) {
@@ -27,13 +29,15 @@ export function MobileDrawer({
   const { user } = useSession();
   const logout = useLogout();
 
+  // No close() cleanup: under Strict Mode's mount → cleanup → mount, its queued `close` event would land after the
+  // second showModal() and shut the drawer at once. Unmounting removes the dialog (and its modal state) anyway.
   useEffect(() => {
-    const dialog = ref.current!;
-    dialog.showModal();
-    return () => dialog.close();
+    const dialog = ref.current;
+    if (dialog && !dialog.open) dialog.showModal();
   }, []);
 
   const quick: { icon: IconName; label: string; href: string; badge?: number }[] = [
+    ...(user && siteAvailable(site, 'live_classes') ? [{ icon: 'calendar' as const, label: t('live'), href: routes.liveSchedule }] : []),
     ...(user ? [{ icon: 'heart' as const, label: t('wishlist'), href: routes.wishlist }] : []),
     { icon: 'cart', label: t('cart'), href: routes.cart, badge: user?.cartCount },
     ...(user && site.features.certificates ? [{ icon: 'award' as const, label: t('certificates'), href: routes.certificates }] : []),
@@ -66,8 +70,8 @@ export function MobileDrawer({
         )}
         <nav aria-label={t('menu')}>
           <ul className={styles.nav}>
-            {navItems.map((item) => (
-              <li key={item.href}>
+            {navItems.map((item, i) => (
+              <li key={`${i}-${item.href}`}>
                 <Link href={item.href} onClick={onClose} aria-current={isActive(pathname, item) ? 'page' : undefined}>
                   {item.label}
                   <Icon name="chevronRight" size={18} className="flip-rtl" />
@@ -97,11 +101,11 @@ export function MobileDrawer({
                 href={routes.account}
                 onClick={onClose}
                 className="avatar"
-                style={{ width: 38, height: 38, fontSize: 13, background: user.color }}
+                style={{ width: 38, height: 38, fontSize: 13, background: avatarBackground(user) }}
                 aria-hidden="true"
                 tabIndex={-1}
               >
-                {user.initials}
+                <UserAvatar user={user} />
               </Link>
               <Link href={routes.account} onClick={onClose} className={styles.profile}>
                 <strong>{t('drawerProfile')}</strong>
@@ -113,9 +117,11 @@ export function MobileDrawer({
                 disabled={logout.isPending}
                 onClick={() =>
                   logout.mutate(undefined, {
-                    onSuccess: () => {
+                    onSuccess: (result) => {
                       onClose();
-                      hardNavigate(routes.signIn());
+                      const idp = signOutRedirect(result);
+                      if (idp) window.location.assign(idp);
+                      else hardNavigate(routes.signIn());
                     },
                   })
                 }

@@ -200,3 +200,13 @@
     padding: 22px 18px;
   }
 }
+.providers {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.notice {
+  background: var(--brand-tint);
+  color: var(--tx-strong);
+  border: 1px solid var(--line);
+}

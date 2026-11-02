@@ -15,9 +15,9 @@ test('buy a course by card and start learning', async ({ page }) => {
   await page.getByRole('button', { name: 'Apply' }).click();
   await expect(page.getByText('20% discount applied')).toBeVisible();
 
-  await page.getByLabel('Card number').fill('4242424242424242');
-  await page.getByLabel('Expiry').fill('0428');
-  await page.getByLabel('CVC').fill('123');
+  // No card fields on our page: the fake gateway's stand-in for Stripe's Payment Element picks a test card.
+  await expect(page.getByLabel('Card number')).toHaveCount(0);
+  await expect(page.getByRole('group', { name: 'Test card' })).toBeVisible();
   await page.getByRole('checkbox', { name: /I agree/ }).check();
   await page.locator('form button[type=submit]', { hasText: 'Pay $' }).click();
 
@@ -29,9 +29,7 @@ test('buy a course by card and start learning', async ({ page }) => {
 
 test('declined cards show an inline error and charge nothing', async ({ page }) => {
   await signIn(page, 'amplify', '/checkout?course=podcast-launchpad');
-  await page.getByLabel('Card number').fill('4000000000000002');
-  await page.getByLabel('Expiry').fill('0428');
-  await page.getByLabel('CVC').fill('123');
+  await page.getByLabel(/declined/).check({ force: true });
   await page.getByRole('checkbox', { name: /I agree/ }).check();
   await page.locator('form button[type=submit]', { hasText: 'Pay $' }).click();
   await expect(page.locator('.alert-bad')).toContainText('declined');
@@ -70,4 +68,23 @@ test('guest cart survives sign-in', async ({ page }) => {
   await signIn(page, 'amplify', '/cart');
   await expect(page.getByRole('link', { name: 'Podcast Launchpad' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Client Acquisition Sprint' })).toBeVisible();
+});
+
+test('link Discord from the account page, see a failed round trip explained, and unlink', async ({ page }) => {
+  await signIn(page, 'amplify', '/account');
+  const card = page.getByRole('region', { name: 'Discord community' });
+  await card.getByRole('link', { name: 'Link Discord' }).click();
+
+  // Back from the round trip: the outcome shows once and the query string is stripped.
+  await expect(page.getByRole('status').filter({ hasText: 'Discord linked.' })).toBeVisible();
+  await expect(page).toHaveURL(/\/account$/);
+  await expect(card.getByText('Linked as jordan.tate')).toBeVisible();
+
+  await card.getByRole('button', { name: 'Unlink' }).click();
+  await expect(page.getByText('Discord unlinked — the roles from your courses will be removed')).toBeVisible();
+  await expect(card.getByRole('link', { name: 'Link Discord' })).toBeVisible();
+
+  await page.goto(tenantUrl('amplify', '/api/v1/me/discord/link?next=%2Faccount&mock_reason=already_linked'));
+  await expect(page.getByRole('alert').filter({ hasText: 'already linked to another learner' })).toBeVisible();
+  await expect(page).toHaveURL(/\/account$/);
 });

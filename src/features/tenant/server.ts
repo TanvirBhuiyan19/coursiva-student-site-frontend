@@ -6,6 +6,7 @@ import { locale as localeParam, tenant as tenantParam } from 'next/root-params';
 import { env } from '@/config/env';
 import { localizePath } from '@/i18n/locales';
 import { apiGetOrNull, cacheTags } from '@/lib/api/server';
+import { normalizeSite } from './normalize';
 import type { Site } from './types';
 
 /**
@@ -43,7 +44,8 @@ export const currentScope = cache(async (): Promise<Scope> => {
 export const getSite = cache(async (tenant: string, locale?: string): Promise<Site> => {
   const site = await apiGetOrNull<Site>(tenant, '/site', { tags: [cacheTags.site(tenant)], locale });
   if (!site) notFound();
-  return site;
+  // An older or partial (cached) payload renders with safe defaults instead of failing every page.
+  return normalizeSite(site);
 });
 
 export const getCurrentSite = async () => {

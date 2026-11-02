@@ -13,6 +13,11 @@ const env = {
   REVALIDATE_SECRET: 'dev-revalidate-secret',
   NOINDEX_HOSTS: '',
   DEV_DEFAULT_TENANT: 'amplify',
+  // The mock API keeps the contract's original path and cookie (production defaults are Laravel's).
+  API_RESOLVE_PATH: '/platform/v1/domains/resolve',
+  SESSION_COOKIE: 'coursiva_session',
+  // The only origin allowed to frame the staff preview (production has no default).
+  DASHBOARD_ORIGIN: 'http://app.localhost:5174',
   PORT: String(WEB_PORT),
   MOCK_API_PORT: String(API_PORT),
 };

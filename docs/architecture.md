@@ -40,8 +40,16 @@ Browser ──► CDN (keys on Host) ──► Next.js ──┬─► proxy.ts 
   values — i.e. the tenant list at build. Tenants sign up at runtime, so every tenant route uses
   `generateStaticParams() => []` (render on first request, then cache). Builds never call the API.
 - **Data Cache tags** (`lib/api/server.ts`): `t:<slug>`, `t:<slug>:site`, `…:catalog`, `…:course:<slug>`,
-  `…:page:<slug>`, `…:membership`, `…:content`. Laravel calls `POST /hooks/revalidate` (HMAC-signed) with the tags
-  that changed; `revalidateTag(tag, 'max')` serves stale while regenerating. One-hour safety expiry.
+  `…:pages`, `…:membership`, `…:content`, `…:blog`. Laravel calls `POST /hooks/revalidate` (HMAC-signed) with the tags
+  that changed; `revalidateTag(tag, { expire: 0 })` expires them at once, so the next request renders fresh content (no
+  stale page after a publish). One-hour safety expiry.
+- **Site builder**: the school's pages (`/` and the `[...slug]` catch-all, which never shadows a built-in route),
+  header, footer, theme tokens (`data-*` on `<html>` → `styles/tokens.css`), announcement, favicon and head code come
+  from `GET /site` and `GET /pages/{slug}` ([api/pages.md](api/pages.md)). Password and members-only pages render
+  their gate in the cached HTML and load in the browser with the visitor's cookies.
+- **Personal rendering** (previews, unlocked private sites): `/__site` turns on Draft Mode for that browser only; its
+  requests bypass the caches and server reads forward its cookies and preview token (`lib/api/personal.ts`). A locked
+  site serves everyone else a static lock screen.
 - **Public pages never read cookies**, which is what keeps them cacheable. Personalisation happens in the browser.
 - **SEO surface**: per-page `generateMetadata` (title template, description, canonical, Open Graph, Twitter),
   JSON-LD (`EducationalOrganization`, `WebSite` + SearchAction, `Course` + `Offer` + `AggregateRating` + reviews,
@@ -54,8 +62,8 @@ Browser ──► CDN (keys on Host) ──► Next.js ──┬─► proxy.ts 
 ## 3. Auth (Backend-for-Frontend)
 
 Sanctum SPA cookies only work first-party. A tenant on `learn.acme.com` calling `api.coursiva.app` would be
-cross-site, so **the browser only ever calls its own host**: the proxy streams `/api/*` and `/sanctum/*` to Laravel,
-adding `X-Tenant`/`X-Forwarded-Host` and dropping any browser `Authorization` header. Session and XSRF cookies stay
+cross-site, so **the browser only ever calls its own host**: the proxy streams `/api/*` and `/sanctum/*` (and SMS short
+links `/l/{code}` → `/api/v1/l/{code}`, no locale rewrite) to Laravel, adding `X-Tenant`/`X-Forwarded-Host` and dropping any browser `Authorization` header. Session and XSRF cookies stay
 first-party on each tenant domain. Server Components use a separate service token and never see learner cookies.
 
 Private pages are gated optimistically in the proxy (session cookie present?); the API is the real gate. After
@@ -83,23 +91,52 @@ mock-api/                  Laravel stand-in (Hono) — the executable API contra
 
 ## 5. Payments
 
-Card entry is Stripe's Payment Element in production (PCI SAQ-A: card data never touches our servers, state or
-logs). `features/commerce/payments.ts` is the boundary; in development it validates the design's mock card fields
-and returns Stripe test tokens. PayPal, Klarna and Afterpay are hosted redirects started by the API. Every price on
-the checkout comes from `POST /checkout/quote`.
+Card entry is Stripe's Payment Element (PCI SAQ-A: card data never touches our servers, state or logs), mounted on
+the school's connected account with the publishable key from the quote (`Quote.payment`). It creates a
+ConfirmationToken that `POST /checkout` confirms server-side; 3-D Secure comes back as `next_action` and runs with
+`stripe.handleNextAction`, then the order is read until the webhook marks it paid. `features/commerce/payments.ts` is
+the boundary (`components/PaymentFields.tsx` renders the Element, or a test-card picker with Laravel's fake gateway
+and the mock — there are no card fields anywhere). Wallets come inside the Element; PayPal and pay-later only appear
+when the gateway can take them (`Quote.payment.methods`). Free orders skip payment; free courses enrol in one click
+without checkout. Every price on the checkout comes from `POST /checkout/quote`.
 
 ## 6. Video
 
-HLS + CENC from the platform pipeline, signed CDN URLs, multi-DRM (Widevine/FairPlay). Play with Shaka Player,
-dynamically imported so it never ships to pages without video. Captions are mandatory. The mock has no media.
+Signed Mux HLS (4 h tokens), optional Mux DRM (Widevine / FairPlay / PlayReady licence URLs → Shaka's `drm` config),
+a signed source-file fallback and third-party embeds. Play with Shaka Player (`shaka-player` HLS build), dynamically
+imported so it never ships to pages without video. Captions are mandatory. The school's dynamic watermark is drawn by
+the player over the video, inside the fullscreen container. The mock has no media.
+
+Other lesson kinds load their code on demand too (`next/dynamic`): the SCORM/xAPI player (`window.API` /
+`API_1484_11` adapters), the assignment and peer-review views, and the AI tutor panel. See
+[api/learning.md](api/learning.md).
 
 ## 7. Deployment
 
 - Node runtime (`next start`, Docker) behind a CDN that **keys on Host** and preserves it upstream. Cloudflare for SaaS
   (custom hostnames + automatic TLS) fits the platform's R2/CDN setup; Vercel's domains API is the managed alternative.
-- For more than one Next.js instance, configure a shared cache handler (Redis) so ISR and `revalidateTag` are
-  consistent across instances.
-- Env (server-only): `API_URL`, `API_SERVICE_TOKEN`, `PLATFORM_ROOT_DOMAIN`, `REVALIDATE_SECRET`, `NOINDEX_HOSTS`.
+- **Run a single Node instance** (scale it vertically). ISR pages and `revalidateTag` live in that process's cache:
+  Laravel's `/hooks/revalidate` call reaches one instance, so a second instance would keep serving stale pages. More
+  than one instance needs a shared cache handler (Redis `cacheHandler` in `next.config.ts`) first — not configured.
+- The API must trust this server as a proxy (Laravel `TRUSTED_PROXIES` = this server's IP, or the private network
+  it calls from): the BFF forwards the learner's `X-Forwarded-For` and `X-Forwarded-Host`, and Laravel resolves the
+  school from the forwarded host and rate-limits by the forwarded IP. See backend `docs/production.md` → Proxies.
+- Env (server-only, see `.env.example`):
+
+  | Variable               | Production value                                                                                |
+  | ---------------------- | ----------------------------------------------------------------------------------------------- |
+  | `API_URL`              | Laravel's origin as seen from this server (private URL is fine)                                 |
+  | `API_SERVICE_TOKEN`    | plaintext of the API's `STUDENT_SITE_SERVICE_TOKEN` (the API keeps its `sha256:` hash)          |
+  | `API_RESOLVE_PATH`     | default `/api/v1/internal/domains/resolve` (the mock uses `/platform/v1/...`)                   |
+  | `SESSION_COOKIE`       | default `coursiva_learner_session` (Laravel's learner cookie; the mock uses `coursiva_session`) |
+  | `PLATFORM_ROOT_DOMAIN` | = the API's `PLATFORM_TENANT_ROOT_DOMAIN` (`example.com` → `<school>.example.com`)              |
+  | `REVALIDATE_SECRET`    | = the API's `REVALIDATE_SECRET`; the API's `STUDENT_SITE_REVALIDATE_URL` points here            |
+  | `NOINDEX_HOSTS`        | staging/preview hosts, e.g. `*.preview.example.com`                                             |
+
   Health check: `GET /hooks/health`.
-- Security headers in `next.config.ts` (HSTS, nosniff, referrer policy, permissions policy, frame-ancestors). A
-  nonce-based CSP would make every page dynamic; add a hash-based `script-src` once third-party scripts are settled.
+
+- Security headers in `src/lib/securityHeaders.ts`, applied by `next.config.ts` (HSTS, nosniff, referrer policy,
+  permissions policy, `frame-ancestors 'none'` + `X-Frame-Options: DENY` on pages, `'self'` on proxied API content for
+  SCORM). The staff preview (`/preview/*`) may be framed only by `DASHBOARD_ORIGIN` — the proxy sets that policy (plus
+  `no-referrer`, noindex). A nonce-based CSP would make every page dynamic; add a hash-based `script-src` once
+  third-party scripts are settled.

@@ -29,6 +29,8 @@
   margin: 56px auto 0;
 }
 .tableWrap {
+  /* Contains the cells' absolutely positioned .sr-only labels, so the scroller clips them too. */
+  position: relative;
   margin-top: 20px;
   overflow-x: auto;
 }

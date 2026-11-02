@@ -114,6 +114,19 @@
   color: var(--tx2);
   margin-top: 8px;
 }
+/* A builder section body (Markdown): its lists read like its paragraphs. */
+.legalBody {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--tx2);
+  margin-top: 8px;
+}
+.legalBody p {
+  margin-top: 0;
+}
+.legalBody > * + * {
+  margin-top: 0.75em;
+}
 .legalCta {
   margin-top: 36px;
   padding: 22px;
@@ -136,4 +149,109 @@
     flex-direction: column;
     text-align: center;
   }
+}
+
+/* Help centre: article links, search results and the article page. */
+.articleLink {
+  color: var(--tx2);
+  text-decoration: none;
+}
+.articleLink:hover,
+.articleLink:focus-visible {
+  color: var(--brand);
+  text-decoration: underline;
+}
+.results {
+  max-width: 720px;
+  margin: 28px auto 0;
+}
+.searchError {
+  margin-bottom: 14px;
+}
+.resultList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.result {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+}
+.resultTitle {
+  font-weight: 700;
+  font-size: 15.5px;
+  color: var(--tx);
+}
+.resultMeta {
+  font-size: 12.5px;
+  color: var(--tx3);
+  margin-top: 2px;
+}
+.resultExcerpt {
+  font-size: 14px;
+  color: var(--tx2);
+  margin-top: 6px;
+}
+.article {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--tx3);
+}
+.crumbs a {
+  font-weight: 600;
+  color: var(--tx2);
+}
+.articleBody {
+  margin-top: 22px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--tx2);
+}
+.articleBody :is(h2, h3, h4) {
+  color: var(--tx);
+  font-weight: 700;
+  margin-top: 26px;
+}
+.articleBody h2 {
+  font-size: 19px;
+}
+.articleBody h3 {
+  font-size: 16.5px;
+}
+.articleBody :is(p, ul, ol, blockquote) {
+  margin-top: 10px;
+}
+.articleBody :is(ul, ol) {
+  padding-inline-start: 22px;
+}
+.articleBody ul {
+  list-style: disc;
+}
+.articleBody ol {
+  list-style: decimal;
+}
+/* Links in running text are underlined: colour alone doesn't set them apart from the body text (WCAG 1.4.1). */
+.articleBody a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.articleBody blockquote {
+  border-inline-start: 3px solid var(--line);
+  padding-inline-start: 14px;
+}
+.related {
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.related h2 {
+  font-size: 16.5px;
+  font-weight: 700;
 }

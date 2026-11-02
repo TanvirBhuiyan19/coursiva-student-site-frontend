@@ -1,9 +1,14 @@
 /** Seed for "Amplify Coaching" — the tenant the design is drawn with. Copy comes from designs/Student Site.dc.html. */
 import type { CourseRow, TenantData } from '../lib/records';
-import { funnelQuiz, lessonIds, modules, P, Q, V } from './build';
+import { NO_TRACKING } from '@/features/tracking/ids';
+import { amplifySite } from './site';
+import { A, funnelQuiz, L, lessonIds, modules, P, Q, S, SV, T, V, X } from './build';
+import { amplifyOffers } from './offers';
 
 const now = new Date();
 const iso = (s: string) => new Date(s).toISOString();
+const daysAgo = (d: number) => new Date(now.getTime() - d * 86_400_000).toISOString();
+const daysAhead = (d: number) => new Date(now.getTime() + d * 86_400_000).toISOString();
 
 /** Next Thursday, 2pm US Pacific (21:00 UTC during daylight time). */
 function nextThursdayAt14() {
@@ -70,15 +75,31 @@ const courses: CourseRow[] = [
       [
         'Module 1 · Foundations',
         [
-          V('Welcome & how this course works', '4:12'),
-          V('The anatomy of a funnel', '16:40'),
-          P('Funnel mapping worksheet'),
-          Q('Foundations check', funnelQuiz()),
+          // The free preview: playable for guests on the course page (an embed — the mock has no media files).
+          // Some lessons carry a summary: the course page's outline shows it when the row is expanded.
+          X(V('Welcome & how this course works', '4:12', { embedUrl: 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ' }), {
+            // Markdown (the dashboard's rich text editor): bold, italic, lists, links.
+            summary:
+              'A **quick tour** of the course:\n\n- how the modules build on each other\n- where to get help when you are stuck\n\nStart with the [launch checklist](https://example.com/launch-checklist).',
+          }),
+          X(V('The anatomy of a funnel', '16:40'), {
+            summary: 'The four stages every funnel shares, and the one number to watch at each stage.',
+          }),
+          // More free previews: a PDF (inline viewer) and a quiz (its summary, never its questions).
+          X(P('Funnel mapping worksheet'), {
+            freePreview: true,
+            summary: 'A one-page worksheet to sketch your own funnel before you build anything.',
+          }),
+          X(Q('Foundations check', funnelQuiz()), { freePreview: true }),
         ],
       ],
       [
         'Module 2 · Your offer',
-        [V('Positioning your offer', '21:08'), V('Pricing psychology', '18:33'), Q('Offer clarity quiz', funnelQuiz())],
+        [
+          X(V('Positioning your offer', '21:08'), { summary: 'Find the one sentence that makes the right buyer say “that’s for me”.' }),
+          V('Pricing psychology', '18:33'),
+          Q('Offer clarity quiz', funnelQuiz()),
+        ],
       ],
       [
         'Module 3 · Landing pages',
@@ -196,6 +217,7 @@ const courses: CourseRow[] = [
   course({
     id: 'crs_p',
     slug: 'podcast-launchpad',
+    instructorSlug: 'priya-shah',
     title: 'Podcast Launchpad',
     categorySlug: 'content',
     coverColor: 'oklch(0.72 0.13 75)',
@@ -254,6 +276,193 @@ const courses: CourseRow[] = [
       ['Module 2 · In practice', [V('Three-tier offers', '13:20'), V('Raising your rates', '11:45'), P('Pricing scripts')]],
     ]),
   }),
+  // Exercises the newer lesson kinds: watermarked video, SCORM 1.2 / 2004, cmi5, a quiz held for review and two
+  // assignments (peer-reviewed, one already graded with a quarantined file).
+  course({
+    id: 'crs_l',
+    slug: 'launch-lab',
+    instructorSlug: 'leo-park',
+    title: 'Launch Lab',
+    categorySlug: 'marketing',
+    coverColor: 'oklch(0.5 0.14 210)',
+    level: 'intermediate',
+    price: 14900,
+    rating: 4.8,
+    reviewCount: 22,
+    studentCount: 97,
+    durationMinutes: 120,
+    excerpt: 'A hands-on lab: simulate your funnel, build your offer and get feedback from classmates on your landing page.',
+    description: 'A hands-on lab: simulate your funnel, build your offer and get feedback from classmates on your landing page.',
+    outcomes: ['Test a funnel before you build it', 'Write a positioning statement', 'Draft a landing page', 'Give useful peer feedback'],
+    requirements: ['The Funnel Blueprint, or an offer you already sell'],
+    audience: ['Creators about to launch', 'Coaches who learn by doing'],
+    modules: modules('l', [
+      [
+        'Module 1 · Simulate',
+        [
+          V('Welcome to the lab', '5:40', { watermark: true }),
+          S('Funnel simulator', {
+            id: 'scp_sim',
+            runtime: 'scorm12',
+            standard: 'SCORM 1.2',
+            version: 1,
+            tracking: 'Completion + score',
+            masteryScore: 80,
+            activityId: 'urn:coursiva:scorm:scp_sim',
+          }),
+          Q('Reflection check', [
+            {
+              id: '',
+              prompt: 'Which step of your funnel will you test first?',
+              options: ['Traffic', 'Landing page', 'Checkout', 'Onboarding'],
+              answer: 1,
+              points: 1,
+            },
+            {
+              id: '',
+              type: 'multi_select',
+              prompt: 'Which of these are leading indicators?',
+              options: ['Opt-in rate', 'Refund rate next year', 'Click-through rate', 'Lifetime revenue'],
+              answer: 0,
+              answers: [0, 2],
+              points: 1,
+            },
+            {
+              id: '',
+              type: 'free_text',
+              prompt: 'In two or three sentences, describe the change you will make after the simulation.',
+              options: [],
+              answer: -1,
+              points: 2,
+            },
+          ]),
+        ],
+      ],
+      [
+        'Module 2 · Build',
+        [
+          S('Offer builder', {
+            id: 'scp_offer',
+            runtime: 'scorm2004',
+            standard: 'SCORM 2004 4th Edition',
+            version: 2,
+            tracking: 'Completion only',
+            masteryScore: null,
+            activityId: 'urn:coursiva:scorm:scp_offer',
+          }),
+          S('Pitch practice', {
+            id: 'scp_pitch',
+            runtime: 'cmi5',
+            standard: 'xAPI (cmi5)',
+            version: 1,
+            tracking: 'Full xAPI statements',
+            masteryScore: null,
+            activityId: 'https://amplifycoaching.com/xapi/pitch-practice',
+          }),
+          A('Landing page draft', {
+            id: 'asg_landing',
+            title: 'Landing page draft',
+            brief: 'Draft the hero and first two sections of your landing page. Paste the copy or attach a PDF or DOCX.',
+            points: 20,
+            dueKind: 'weekly',
+            dueWeekday: 5,
+            dueAt: null,
+            reviewMode: 'peer_instructor',
+            peerReviewCount: 2,
+            peerReviewDays: 7,
+            latePolicy: 'accepted_flagged',
+            attempts: 2,
+            fileTypes: ['pdf', 'docx', 'png', 'jpg'],
+            maxFileMb: 20,
+            gatesNextModule: false,
+            rubric: [
+              { id: 'crit_hook', label: 'Headline hook', hint: 'Leads with the outcome the student wants', max: 5 },
+              { id: 'crit_clarity', label: 'Clarity', hint: 'A stranger understands the offer in 10 seconds', max: 10 },
+              { id: 'crit_cta', label: 'Call to action', hint: 'One clear next step', max: 5 },
+            ],
+          }),
+          A('Positioning statement', {
+            id: 'asg_position',
+            title: 'Positioning statement',
+            brief: 'Write your positioning statement: who it is for, the problem, and why you.',
+            points: 10,
+            dueKind: 'module_gate',
+            dueWeekday: null,
+            dueAt: iso('2026-09-20T23:59:59Z'),
+            reviewMode: 'peer_instructor',
+            peerReviewCount: 2,
+            peerReviewDays: 7,
+            latePolicy: 'accepted',
+            attempts: 1,
+            fileTypes: ['pdf', 'docx'],
+            maxFileMb: 10,
+            gatesNextModule: false,
+            rubric: [
+              { id: 'crit_who', label: 'Who it is for', hint: 'A specific audience', max: 5 },
+              { id: 'crit_why', label: 'Why you', hint: 'A credible difference', max: 5 },
+            ],
+          }),
+        ],
+      ],
+      // Course builder v2 O4: completion rules (video share, time on page, knowledge checks, live attendance) and
+      // availability (days after enrolment, a date, after another lesson).
+      [
+        'Module 3 · Go live',
+        [
+          X(V('Launch walkthrough', '12:00'), { completionRule: 'video', completionValue: 80 }),
+          X(T('Launch-day checklist'), { completionRule: 'time', completionValue: 10 }),
+          // A free preview with blocks: text and knowledge checks (guests can't check answers).
+          X(T('Check your launch plan'), { completionRule: 'checks', freePreview: true }),
+          X(
+            L('Live launch review', {
+              sessionId: 'lsn_launch_review',
+              title: 'Live launch review',
+              startsAt: daysAhead(2),
+              durationMin: 60,
+              provider: 'zoom',
+              status: 'scheduled',
+            }),
+            { completionRule: 'live' },
+          ),
+          X(
+            L('Launch Q&A replay', {
+              sessionId: 'lsn_launch_qa',
+              title: 'Launch Q&A',
+              startsAt: daysAgo(3),
+              durationMin: 45,
+              provider: 'built_in',
+              status: 'ended',
+              recordingEmbedUrl: 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ',
+            }),
+            { completionRule: 'live' },
+          ),
+          X(V('Post-launch review', '14:00'), { available: { mode: 'days', days: 14 } }),
+          X(T('Your 30-day plan'), { available: { mode: 'date', at: daysAhead(21) } }),
+          X(T('Celebrate your launch'), { available: { mode: 'after', lessonId: 'les_l_2_1' } }),
+          // A Survey lesson (les_l_2_8): a Forms & leads form answered in the player; completes on submit.
+          SV('Launch Lab feedback', {
+            formId: 'frm_launch_feedback',
+            title: 'Launch Lab feedback',
+            intro: 'Tell us how the lab went — it takes two minutes and shapes the next cohort.',
+            allowResubmit: true,
+            fields: [
+              { key: 'rating', label: 'How would you rate Launch Lab?', required: true, type: 'rating', options: [] },
+              { key: 'highlight', label: 'What helped you most?', required: false, type: 'long_text', options: [] },
+              {
+                key: 'pace',
+                label: 'How was the pace?',
+                required: false,
+                type: 'choice',
+                options: ['Too slow', 'Just right', 'Too fast'],
+              },
+              { key: 'recommend', label: 'I would recommend Launch Lab to a friend', required: false, type: 'checkbox', options: [] },
+              { key: 'hours', label: 'Hours spent per week', required: false, type: 'number', options: [] },
+            ],
+          }),
+        ],
+      ],
+    ]),
+  }),
 ];
 
 const byId = Object.fromEntries(courses.map((c) => [c.id, c]));
@@ -278,11 +487,13 @@ export function amplify(): TenantData {
       legalName: 'Amplify Coaching',
       tagline: 'Practical marketing courses from coaches who’ve done it themselves.',
       logoUrl: null,
+      iconUrl: null,
       whiteLabel: false,
       brand: { hue: 275, chroma: 0.2 },
       defaultLocale: 'en-US',
       locales: ['en-US'],
       currency: 'USD',
+      timeZone: 'America/Los_Angeles',
       primaryHost: 'amplify.localhost',
       supportEmail: 'help@amplifycoaching.com',
       social: [
@@ -308,7 +519,10 @@ export function amplify(): TenantData {
         },
       },
       oauthProviders: ['google'],
+      ssoEnabled: true,
       features: { membership: true, community: true, certificates: true, streaks: true },
+      // No tags in the seed (tests never load third-party scripts); `POST /__mock/tracking/{tenant}` sets them.
+      tracking: NO_TRACKING,
     },
     instructor: {
       name: 'Maya Reyes',
@@ -317,7 +531,101 @@ export function amplify(): TenantData {
       role: 'Founder, Amplify Coaching',
       bio: 'Ten years building funnels for coaches and creators — now distilled into courses with worksheets, live Q&A every week, and a community that answers fast.',
       studentCount: 1284,
+      profileSlug: 'maya-reyes',
     },
+    // SEO (docs/api/pages.md → SEO): redirects the proxy enforces, one page override and the school's robots rules.
+    seo: {
+      titleTemplate: '{page} · {school}',
+      robotsTxt: 'User-agent: *\nDisallow: /drafts\n\nUser-agent: Googlebot\nAllow: /account/settings\nDisallow: /tmp',
+      pages: [
+        {
+          path: '/blog',
+          title: 'The Amplify blog — funnels, email and launches',
+          description: 'Practical notes on funnels, email and launches from the Amplify coaches, every week.',
+          canonicalUrl: null,
+          ogImageUrl: 'https://cdn.example.com/amplify/blog.png',
+        },
+        { path: '/courses/launch-lab', noindex: true },
+      ],
+      redirects: [
+        { id: 'rd_old_courses', from: '/old-courses', to: '/courses', status: 301, keepQuery: true, hits: 0 },
+        { id: 'rd_old_blog', from: '/old-blog/*', to: '/blog/*', status: 301, keepQuery: true, hits: 0 },
+        { id: 'rd_promo', from: '/promo', to: '/old-courses?ref=promo', status: 302, keepQuery: true, hits: 0 },
+        { id: 'rd_partner', from: '/partner-site', to: 'https://example.com/partners', status: 302, keepQuery: false, hits: 0 },
+      ],
+    },
+    instructorProfiles: [
+      {
+        slug: 'maya-reyes',
+        formerSlugs: ['maya'],
+        name: 'Maya Reyes',
+        color: 'oklch(0.52 0.16 275)',
+        avatarUrl: null,
+        coverUrl: null,
+        headline: 'Founder of Amplify Coaching · Funnel strategist',
+        expertise: ['Sales funnels', 'Email marketing', 'Brand storytelling', 'Pricing', 'Client acquisition'],
+        bioHtml:
+          '<p>Ten years building funnels for coaches and creators — now distilled into courses with worksheets, live Q&amp;A every week, and a community that answers fast.</p>\n<h2>How I teach</h2>\n<ul>\n<li><strong>Small, shippable steps</strong> — every lesson ends with something you launch.</li>\n<li>Real numbers from real launches, not theory.</li>\n</ul>\n<p>Before Amplify I ran growth at a coaching marketplace. Read more on <a href="https://www.linkedin.com/in/mayareyes" rel="nofollow noopener noreferrer" target="_blank">LinkedIn</a>.</p>',
+        credentials: [
+          { title: 'Certified Funnel Strategist', issuer: 'Funnel Academy', year: 2019 },
+          { title: 'Email Marketing Certification', issuer: 'HubSpot Academy', year: 2021 },
+          { title: 'BA Marketing', issuer: '', year: null },
+        ],
+        socialLinks: [
+          { platform: 'linkedin', url: 'https://www.linkedin.com/in/mayareyes' },
+          { platform: 'x', url: 'https://x.com/mayareyes' },
+          { platform: 'youtube', url: 'https://www.youtube.com/@mayareyes' },
+        ],
+        website: 'https://mayareyes.example.com',
+        seoTitle: 'Maya Reyes — funnel strategist and course creator',
+        seoDescription: '',
+        published: true,
+        active: true,
+        learnerCount: 1284,
+        updatedAt: iso('2026-09-14T09:00:00Z'),
+      },
+      {
+        slug: 'priya-shah',
+        formerSlugs: [],
+        name: 'Priya Shah',
+        color: 'oklch(0.5 0.14 20)',
+        avatarUrl: null,
+        coverUrl: null,
+        headline: 'Podcast producer',
+        expertise: ['Podcasting', 'Audio'],
+        bioHtml: '<p>Producer of three top-100 business podcasts. I help coaches find their voice — literally.</p>',
+        credentials: [],
+        socialLinks: [{ platform: 'instagram', url: 'https://www.instagram.com/priyashah' }],
+        website: null,
+        seoTitle: '',
+        seoDescription: '',
+        published: true,
+        active: true,
+        learnerCount: 312,
+        updatedAt: iso('2026-08-30T09:00:00Z'),
+      },
+      {
+        // A draft: not on the site; its course shows the member's name without a link.
+        slug: 'leo-park',
+        formerSlugs: [],
+        name: 'Leo Park',
+        color: 'oklch(0.48 0.12 200)',
+        avatarUrl: null,
+        coverUrl: null,
+        headline: 'Launch coach',
+        expertise: [],
+        bioHtml: '',
+        credentials: [],
+        socialLinks: [],
+        website: null,
+        seoTitle: '',
+        seoDescription: '',
+        published: false,
+        active: true,
+        learnerCount: 0,
+        updatedAt: null,
+      },
+    ],
     categories: [
       { slug: 'marketing', name: 'Marketing', color: 'oklch(0.55 0.17 275)' },
       { slug: 'branding', name: 'Branding', color: 'oklch(0.52 0.15 300)' },
@@ -331,6 +639,33 @@ export function amplify(): TenantData {
       price: 2900,
     },
     orderPrefix: 'AMP',
+    // Checkout offers, all on Brand Storytelling Lab (lib/offers.ts).
+    offers: amplifyOffers(),
+    // Orders → Tax: UK VAT added to prices; EU VAT through the OSS at each member state's rate, reverse charge for a
+    // verified business VAT number. No US registration, so US buyers are never asked for a state.
+    taxRegistrations: [
+      {
+        country: 'United Kingdom',
+        subdivision: null,
+        kind: 'VAT',
+        registered: true,
+        taxId: 'GB123456789',
+        rate: 20,
+        inclusive: false,
+        reverseCharge: false,
+      },
+      {
+        country: 'European Union',
+        subdivision: null,
+        kind: 'VAT',
+        registered: true,
+        taxId: 'EU372000041',
+        rate: null,
+        inclusive: false,
+        reverseCharge: true,
+      },
+    ],
+    business: { address: '12 Market Street\nLondon EC1A 1BB\nUnited Kingdom', taxId: 'GB123456789' },
     bundles: [
       {
         slug: 'funnel-email-bundle',
@@ -338,6 +673,19 @@ export function amplify(): TenantData {
         description: 'Our two flagship courses together — build the funnel, then fill it with email.',
         courseSlugs: ['the-funnel-blueprint', 'email-marketing-mastery'],
         price: 39900,
+      },
+    ],
+    products: [
+      {
+        id: 'prd_launch_kit',
+        slug: 'launch-kit',
+        title: 'Launch kit',
+        description: 'The templates, scripts and checklists we use for every course launch.',
+        price: 1900,
+        fileName: 'launch-kit.zip',
+        sizeMb: 4.5,
+        linkExpiryDays: 7,
+        downloadLimit: 5,
       },
     ],
     membership: {
@@ -461,7 +809,18 @@ export function amplify(): TenantData {
         title: 'Courses & progress',
         articles: ['Resume where you left off', 'Retake a quiz', 'Download lesson resources', 'How progress is tracked'],
       },
-      { title: 'Billing & receipts', articles: ['Find your invoice', 'Update your card', 'Apply a coupon', 'Payment plans explained'] },
+      {
+        title: 'Billing & receipts',
+        articles: [
+          {
+            title: 'Find your invoice',
+            body: 'Every order has an invoice. Open the order from your receipt email, or from **Account → Order history**, then choose **Invoice**.\n\n## Need a company invoice?\n\n- Print the invoice or save it as a PDF from the invoice page.\n- For your company’s name and VAT number on it, [contact us](/contact) with the order number.\n\nInvoices list the price, any discount, the tax, the payment method and any refund.',
+          },
+          'Update your card',
+          'Apply a coupon',
+          'Payment plans explained',
+        ],
+      },
       { title: 'Membership', articles: ['Switch plans', 'Cancel membership', 'What happens after cancelling'] },
       { title: 'Certificates', articles: ['Download your certificate', 'Verify a credential', 'Fix a name spelling'] },
       { title: 'Community', articles: ['Post in the right space', 'Community guidelines', 'Report a post'] },
@@ -569,15 +928,200 @@ export function amplify(): TenantData {
         membershipPlanId: null,
         membershipRenewsAt: null,
       },
+      // Classmates in Launch Lab (peer review needs other learners' work).
+      ...[
+        ['usr_priya', 'Priya Nair', 'priya.nair@example.com', 'oklch(0.52 0.16 275)'],
+        ['usr_tom', 'Tom Okafor', 'tom.okafor@example.com', 'oklch(0.52 0.13 300)'],
+      ].map(([uid, name, email, color]) => ({
+        id: uid!,
+        name: name!,
+        email: email!,
+        password: 'password',
+        color: color!,
+        bio: '',
+        timezone: 'Europe/London',
+        website: '',
+        createdAt: iso('2026-03-01T10:00:00Z'),
+        preferences: { newLessons: true, communityReplies: true, liveReminders: false },
+        card: null,
+        weeklyGoal: 3,
+        streakDays: 0,
+        weekActivity: [0, 0, 0, 0, 0, 0, 0],
+        membershipPlanId: null,
+        membershipRenewsAt: null,
+      })),
     ],
     enrollments: [
       { userId: JORDAN, courseId: 'crs_f', enrolledAt: iso('2026-02-04T12:00:00Z'), orderId: 'ord_1001' },
       { userId: JORDAN, courseId: 'crs_e', enrolledAt: iso('2026-04-18T12:00:00Z'), orderId: 'ord_1002' },
       { userId: JORDAN, courseId: 'crs_b', enrolledAt: iso('2026-06-02T12:00:00Z'), orderId: 'ord_1003' },
+      { userId: JORDAN, courseId: 'crs_l', enrolledAt: daysAgo(10), orderId: null },
+      { userId: 'usr_priya', courseId: 'crs_l', enrolledAt: daysAgo(20), orderId: null },
+      { userId: 'usr_tom', courseId: 'crs_l', enrolledAt: daysAgo(18), orderId: null },
     ],
-    completions: [...ids('f'), ...eDone, ...ids('b')].map((lessonId) => ({ userId: JORDAN, lessonId, at: iso('2026-08-10T12:00:00Z') })),
+    completions: [...ids('f'), ...eDone, ...ids('b'), 'les_l_0_0', 'les_l_1_3'].map((lessonId) => ({
+      userId: JORDAN,
+      lessonId,
+      at: iso('2026-08-10T12:00:00Z'),
+    })),
     notes: [],
-    quizAttempts: [],
+    // An earlier "Reflection check" attempt, already reviewed by the instructor (written answers are held for review).
+    quizAttempts: [
+      {
+        id: 'qat_seed_1',
+        userId: JORDAN,
+        lessonId: 'les_l_0_2',
+        scorePercent: 50,
+        passed: false,
+        correct: 1,
+        total: 3,
+        earned: 1,
+        autoPoints: 2,
+        manualPoints: 2,
+        reviewStatus: 'reviewed',
+        feedback: 'Good instinct on the landing page. Your written answer needs a concrete change — what will you do differently?',
+        reviewedAt: daysAgo(2),
+        at: daysAgo(3),
+      },
+    ],
+    scormAttempts: [],
+    submissions: [
+      ...[
+        ['sub_priya_landing', 'usr_priya', 'Headline: Launch your first course in 30 days — without a big audience.'],
+        ['sub_tom_landing', 'usr_tom', 'Headline: Sell your expertise. Section 1: who this is for. Section 2: what you get.'],
+      ].map(([sid, uid, text]) => ({
+        id: sid!,
+        assignmentId: 'asg_landing',
+        lessonId: 'les_l_1_2',
+        userId: uid!,
+        status: 'needs_grading' as const,
+        attempt: 1,
+        submittedAt: daysAgo(4),
+        lateByDays: 0,
+        text: text!,
+        files: [],
+        grade: null,
+        resubmitFeedback: null,
+      })),
+      ...[
+        ['sub_priya_pos', 'usr_priya', 'For first-time course creators who are stuck on pricing, I offer a calm, numbers-first method.'],
+        ['sub_tom_pos', 'usr_tom', 'For agency owners who hate cold outreach: a referral system that runs itself.'],
+      ].map(([sid, uid, text]) => ({
+        id: sid!,
+        assignmentId: 'asg_position',
+        lessonId: 'les_l_1_3',
+        userId: uid!,
+        status: 'needs_grading' as const,
+        attempt: 1,
+        submittedAt: daysAgo(5),
+        lateByDays: 0,
+        text: text!,
+        files: [{ id: `fil_${sid!}`, name: 'positioning.pdf', ext: 'PDF', sizeKb: 182, scanStatus: 'clean' as const }],
+        grade: null,
+        resubmitFeedback: null,
+      })),
+      {
+        id: 'sub_jordan_pos',
+        assignmentId: 'asg_position',
+        lessonId: 'les_l_1_3',
+        userId: JORDAN,
+        status: 'graded',
+        attempt: 1,
+        submittedAt: daysAgo(6),
+        lateByDays: 0,
+        text: 'For coaches who want to sell online without social media: email-first funnels that convert while you coach.',
+        files: [
+          { id: 'fil_jordan_pos_1', name: 'positioning-v2.pdf', ext: 'PDF', sizeKb: 240, scanStatus: 'clean' },
+          { id: 'fil_jordan_pos_2', name: 'notes.docx', ext: 'DOCX', sizeKb: 38, scanStatus: 'infected' },
+        ],
+        grade: {
+          points: 8,
+          maxPoints: 10,
+          percent: 80,
+          feedback: 'Sharp audience. Make the “why you” more specific — a number or a story.',
+          gradedAt: daysAgo(1),
+        },
+        resubmitFeedback: null,
+      },
+    ],
+    peerReviews: [
+      // Classmates reviewed Jordan's positioning statement (shown to Jordan anonymously once graded).
+      {
+        id: 'prv_1',
+        assignmentId: 'asg_position',
+        submissionId: 'sub_jordan_pos',
+        reviewerId: 'usr_priya',
+        status: 'submitted',
+        assignedAt: daysAgo(6),
+        dueAt: daysAgo(-1),
+        submittedAt: daysAgo(3),
+        scores: [
+          { criterionId: 'crit_who', score: 5 },
+          { criterionId: 'crit_why', score: 3 },
+        ],
+        percent: 80,
+        comment: 'Very clear audience. I’d love one proof point for “why you”.',
+      },
+      {
+        id: 'prv_2',
+        assignmentId: 'asg_position',
+        submissionId: 'sub_jordan_pos',
+        reviewerId: 'usr_tom',
+        status: 'submitted',
+        assignedAt: daysAgo(6),
+        dueAt: daysAgo(-1),
+        submittedAt: daysAgo(2),
+        scores: [
+          { criterionId: 'crit_who', score: 4 },
+          { criterionId: 'crit_why', score: 4 },
+        ],
+        percent: 80,
+        comment: '',
+      },
+      // Jordan's own reviews of classmates' positioning statements: one open, one done.
+      {
+        id: 'prv_3',
+        assignmentId: 'asg_position',
+        submissionId: 'sub_priya_pos',
+        reviewerId: JORDAN,
+        status: 'assigned',
+        assignedAt: daysAgo(6),
+        dueAt: daysAgo(-1),
+        submittedAt: null,
+        scores: null,
+        percent: null,
+        comment: '',
+      },
+      {
+        id: 'prv_4',
+        assignmentId: 'asg_position',
+        submissionId: 'sub_tom_pos',
+        reviewerId: JORDAN,
+        status: 'submitted',
+        assignedAt: daysAgo(6),
+        dueAt: daysAgo(-1),
+        submittedAt: daysAgo(4),
+        scores: [
+          { criterionId: 'crit_who', score: 4 },
+          { criterionId: 'crit_why', score: 5 },
+        ],
+        percent: 90,
+        comment: 'Love the “hate cold outreach” hook.',
+      },
+    ],
+    tutor: { enabled: true, handoff: true, resting: false },
+    tutorThreads: [],
+    tutorAsks: [],
+    chargesBlocked: false,
+    discord: { available: true },
+    discordLinks: [],
+    watermark: {
+      opacity: 0.35,
+      color: '#FFFFFF',
+      fontSizePct: 2.5,
+      positions: ['top-left', 'top-right', 'center', 'bottom-left', 'bottom-right'],
+      intervalSeconds: 20,
+    },
     lessonQuestions: [
       {
         id: 'lq_1',
@@ -638,10 +1182,11 @@ export function amplify(): TenantData {
     ],
     carts: [{ owner: JORDAN, courseIds: ['crs_c'] }],
     orders: [
-      ['ord_1001', 'AMP-2026-1001', 'crs_f', '2026-02-04T12:00:00Z'],
-      ['ord_1002', 'AMP-2026-1002', 'crs_e', '2026-04-18T12:00:00Z'],
-      ['ord_1003', 'AMP-2026-1003', 'crs_b', '2026-06-02T12:00:00Z'],
-    ].map(([oid, number, cid, at]) => {
+      ['ord_1000', 'AMP-2026-1000', 'crs_w', '2026-01-22T12:00:00Z', 'partially_refunded'],
+      ['ord_1001', 'AMP-2026-1001', 'crs_f', '2026-02-04T12:00:00Z', 'paid'],
+      ['ord_1002', 'AMP-2026-1002', 'crs_e', '2026-04-18T12:00:00Z', 'paid'],
+      ['ord_1003', 'AMP-2026-1003', 'crs_b', '2026-06-02T12:00:00Z', 'paid'],
+    ].map(([oid, number, cid, at, status]) => {
       const c = byId[cid!]!;
       return {
         id: oid!,
@@ -672,7 +1217,9 @@ export function amplify(): TenantData {
         gift: null,
         seats: null,
         billing: { name: 'Jordan Tate', email: 'jordan.tate@gmail.com', country: 'United States' },
-        status: 'paid' as const,
+        status: status as 'paid' | 'partially_refunded',
+        // A goodwill refund on the first order (the history and invoice show PARTIALLY REFUNDED).
+        refunded: status === 'partially_refunded' ? 1000 : 0,
       };
     }),
     spaces: [
@@ -748,23 +1295,73 @@ export function amplify(): TenantData {
       { name: 'Marcus Webb', points: 640, color: 'oklch(0.52 0.16 275)' },
     ],
     notifications: [
-      ['ntf_1', 'Maya Reyes replied to your post in Wins', '/community', 2],
-      ['ntf_2', 'New lesson added to Email Marketing Mastery', '/learning', 24],
-      ['ntf_3', 'Live Q&A with Maya — Thursday 2pm', '/community', 48],
-    ].map(([nid, text, href, hours]) => ({
+      ['ntf_1', null, 'Maya Reyes replied to your post in Wins', '/community', 2],
+      ['ntf_2', null, 'New lesson added to Email Marketing Mastery', '/learning', 24],
+      ['ntf_3', null, 'Live Q&A with Maya — Thursday 2pm', '/community', 48],
+      // Assessment notices (Laravel's LearnerNotices / upload scanning): each links to the quiz's or assignment's lesson.
+      ['ntf_4', 'quiz_reviewed', 'Your “Reflection check” was reviewed: 50% — not passed.', '/learn/launch-lab/les_l_0_2', 50],
+      [
+        'ntf_5',
+        'peer_review_assigned',
+        '2 classmates’ submissions are ready for your review in “Positioning statement”.',
+        '/learn/launch-lab/les_l_1_3',
+        140,
+      ],
+      ['ntf_6', 'peer_review_reminder', 'Your peer review for “Positioning statement” is due soon.', '/learn/launch-lab/les_l_1_3', 6],
+      [
+        'ntf_7',
+        'deadline_reminder',
+        '“Landing page draft” is due soon. Submit your work before the deadline.',
+        '/learn/launch-lab/les_l_1_2',
+        5,
+      ],
+      [
+        'ntf_8',
+        'file_quarantined',
+        'A file you submitted to “Positioning statement” contains malware and was removed (notes.docx). Ask your instructor how to send a clean copy.',
+        '/learn/launch-lab/les_l_1_3',
+        120,
+      ],
+    ].map(([nid, kind, text, href, hours]) => ({
       id: nid as string,
       userId: JORDAN,
+      ...(kind ? { kind: kind as string } : {}),
       text: text as string,
       href: href as string,
       createdAt: new Date(now.getTime() - (hours as number) * 3_600_000).toISOString(),
       readAt: null,
     })),
     certificates: [
-      { id: 'AC-2026-0341', userId: JORDAN, courseId: 'crs_f', issuedAt: iso('2026-08-12T12:00:00Z') },
+      { id: 'AC-2026-0341', userId: JORDAN, courseId: 'crs_f', issuedAt: iso('2026-08-12T12:00:00Z'), openBadge: true },
       { id: 'AC-2026-0342', userId: JORDAN, courseId: 'crs_b', issuedAt: iso('2026-08-12T12:00:00Z') },
     ],
     tickets: [],
     newsletter: [],
     passwordResets: [],
+    blog: [
+      {
+        slug: 'five-headlines-that-sell',
+        title: 'Five headlines that sell a course',
+        excerpt: 'The formulas we test on every launch page — and the one we retired.',
+        body: '## Why headlines matter\n\nMost visitors read the headline and **nothing else**. Make it count.\n\n- Promise one outcome\n- Name the reader\n- Put a number in it\n\n> Clarity beats cleverness, every time.\n\nRead the [funnel course](/courses/the-funnel-blueprint) for the full method.',
+        publishedAt: iso('2026-09-20T09:00:00Z'),
+        categories: ['Copywriting'],
+        author: 'Maya Brooks',
+        comments: [{ id: 'cm_1', authorName: 'Sam', text: 'Number three doubled our clicks.', createdAt: iso('2026-09-21T10:00:00Z') }],
+      },
+      {
+        slug: 'email-list-from-zero',
+        title: 'An email list from zero',
+        excerpt: 'Your first 1,000 subscribers without ads.',
+        body: 'Start with one lead magnet and one page.\n\n1. Pick a narrow problem\n2. Solve it in a PDF\n3. Share it where your readers already are',
+        publishedAt: iso('2026-09-10T09:00:00Z'),
+        categories: ['Email'],
+        author: 'Maya Brooks',
+        comments: [],
+      },
+    ],
+    builder: amplifySite(),
+    privacy: { cookieBanner: false },
+    mediaVideos: [],
   };
 }

@@ -1,8 +1,10 @@
 'use client';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { conversionSignal } from '@/features/consent/tracking';
+import { trackEvent } from '@/features/tracking/events';
 import { api } from '@/lib/api/client';
 import { ApiError } from '@/lib/api/errors';
-import type { ForgotPasswordInput, LoginInput, RegisterInput, User } from './types';
+import type { ForgotPasswordInput, LoginInput, RegisterInput, ResetPasswordInput, User } from './types';
 
 export const authKeys = { me: ['me'] as const };
 
@@ -43,15 +45,37 @@ export function useLogin() {
 export function useRegister() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: RegisterInput) => api.post<User>('/auth/register', input),
-    onSuccess: (user) => resetLearnerData(qc, user),
+    // `tracking`: what the API may use for a server-side sign-up conversion (docs/api/auth.md).
+    mutationFn: (input: RegisterInput) => {
+      const tracking = conversionSignal();
+      return api.post<User>('/auth/register', { ...input, ...(tracking ? { tracking } : {}) });
+    },
+    onSuccess: (user) => {
+      resetLearnerData(qc, user);
+      trackEvent({ name: 'sign_up', userId: user.id, method: 'email' });
+    },
   });
+}
+
+/**
+ * `POST /auth/logout` answers `204`, or `200 { redirectUrl }` when the session came from SAML single sign-on and the
+ * school's identity provider signs out too (SAML single logout): the browser must then go to that IdP URL, which
+ * comes back to the site's sign-in page.
+ */
+export interface LogoutResult {
+  redirectUrl: string;
+}
+
+/** The IdP single-logout URL to follow after sign-out (absolute http(s) only), or null for the sign-in page. */
+export function signOutRedirect(result: LogoutResult | undefined | null): string | null {
+  const url = result?.redirectUrl;
+  return typeof url === 'string' && /^https?:\/\//i.test(url) ? url : null;
 }
 
 export function useLogout() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => api.post<undefined>('/auth/logout'),
+    mutationFn: () => api.post<LogoutResult | undefined>('/auth/logout'),
     onSuccess: () => {
       qc.clear();
       qc.setQueryData(authKeys.me, null);
@@ -61,6 +85,21 @@ export function useLogout() {
 
 export function useForgotPassword() {
   return useMutation({ mutationFn: (input: ForgotPasswordInput) => api.post<{ sent: boolean }>('/auth/forgot-password', input) });
+}
+
+/** The emailed reset link (and the invited learner's first password). The learner signs in afterwards. */
+export function useResetPassword() {
+  return useMutation({ mutationFn: (input: ResetPasswordInput) => api.post<{ reset: boolean }>('/auth/reset-password', input) });
+}
+
+/** The emailed confirmation link. */
+export function useVerifyEmail() {
+  return useMutation({ mutationFn: (token: string) => api.post<{ verified: boolean }>('/auth/email/verify', { token }) });
+}
+
+/** Sends the signed-in learner a fresh confirmation link (`sent: false` when already confirmed). */
+export function useResendVerification() {
+  return useMutation({ mutationFn: () => api.post<{ sent: boolean }>('/auth/email/verification-notification') });
 }
 
 /** Refresh header counters (cart, wishlist, notifications) after a mutation that changes them. */

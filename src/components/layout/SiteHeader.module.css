@@ -1,10 +1,17 @@
 .header {
-  position: sticky;
+  position: relative;
   top: 0;
   z-index: 50;
   background: var(--glass);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
+}
+
+.header[data-sticky='true'] {
+  position: sticky;
+}
+.cta {
+  flex-shrink: 0;
 }
 
 .inner {
@@ -174,7 +181,14 @@
 
 @media (max-width: 1023px) {
   .nav,
-  .hideTablet {
+  .cta,
+  .hideTablet,
+  /* Beats global `.icon-btn` / `.pill` (same specificity) whatever order the route's CSS chunks load in. */
+  .actions .hideTablet {
+    display: none;
+  }
+  /* The CTA is also a `.btn` (global, same specificity, may load later): win explicitly, like the canvas. */
+  .inner .cta {
     display: none;
   }
   .spacer {
@@ -183,8 +197,10 @@
   .menuBtn {
     display: inline-flex;
   }
+  /* The nav (flex: 1) is hidden here, so the actions pin themselves to the end edge. */
   .actions {
     gap: 12px;
+    margin-inline-start: auto;
   }
 }
 

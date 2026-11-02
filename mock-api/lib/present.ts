@@ -1,10 +1,11 @@
 /** Row → API resource. Business rules that the UI must not recompute (progress, prices, locks) live here. */
-import type { CourseDetail, CourseSummary, LessonOutline } from '@/features/catalog/types';
+import type { CourseDetail, CourseInstructor, CourseSummary, InstructorProfile, LessonOutline } from '@/features/catalog/types';
+import type { InstructorDetail, InstructorStats, InstructorSummary } from '@/features/instructors/types';
 import type { MembershipPlan } from '@/features/membership/types';
 import type { Enrollment, LessonRef, Progress } from '@/features/learning/types';
 import type { Money, Person } from '@/lib/api/types';
 import { initials } from './db';
-import type { CourseRow, LessonRow, TenantData, UserRow } from './records';
+import type { CourseRow, InstructorProfileRow, LessonRow, TenantData, UserRow } from './records';
 
 export const money = (t: TenantData, amount: number): Money => ({ amount: Math.round(amount), currency: t.site.currency });
 
@@ -13,8 +14,114 @@ export const person = (name: string, color: string): Person => ({ name, initials
 const lessonCount = (c: CourseRow) => c.modules.reduce((n, m) => n + m.lessons.length, 0);
 export const allLessons = (c: CourseRow) => c.modules.flatMap((m) => m.lessons.map((l) => ({ lesson: l, module: m })));
 
+/** The course's free previews, in curriculum order (each opens in `GET /courses/{slug}/preview?lesson=`). */
+export const previewLessons = (c: CourseRow) =>
+  allLessons(c)
+    .filter((x) => x.lesson.freePreview)
+    .map((x) => x.lesson);
+
+/** The course's first free preview (`preview`; `GET /courses/{slug}/preview` without `?lesson=`). */
+export const previewLesson = (c: CourseRow) => previewLessons(c)[0];
+
 /** Instalment plan: three payments with a small surcharge, rounded up to whole units — as the design prices it. */
 export const installmentAmount = (total: number) => Math.ceil(total / 3 / 100 + 5) * 100;
+
+/* ── Instructor profiles (Laravel InstructorProfiles) ─────────────────────── */
+
+/** The profile slug of the member teaching the course (their profile may be unpublished or missing). */
+const teacherSlug = (t: TenantData, c: CourseRow) => c.instructorSlug ?? t.instructor.profileSlug;
+
+/** A profile the site may show: published, and its member still an active team member who can teach. */
+export const visibleProfile = (t: TenantData, slug: string | undefined): InstructorProfileRow | null =>
+  (slug !== undefined && t.instructorProfiles?.find((p) => p.slug === slug && p.published && p.active)) || null;
+
+/** The instructor's published, public courses, newest first. */
+export const profileCourses = (t: TenantData, p: InstructorProfileRow) =>
+  t.courses.filter((c) => teacherSlug(t, c) === p.slug).sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+
+/** Figures over the profile's courses: the review mean (1 decimal, null without reviews) and counts. */
+export function instructorStats(t: TenantData, p: InstructorProfileRow): InstructorStats {
+  const courses = profileCourses(t, p);
+  const reviewCount = courses.reduce((n, c) => n + c.reviewCount, 0);
+  const sum = courses.reduce((n, c) => n + c.rating * c.reviewCount, 0);
+  return {
+    learnerCount: p.learnerCount,
+    courseCount: courses.length,
+    rating: reviewCount > 0 ? Math.round((sum / reviewCount) * 10) / 10 : null,
+    reviewCount,
+  };
+}
+
+const bioExcerpt = (html: string) => {
+  const text = html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text.length <= 280 ? text : `${text.slice(0, 279).trimEnd()}…`;
+};
+
+export const instructorSummary = (t: TenantData, p: InstructorProfileRow): InstructorSummary => ({
+  slug: p.slug,
+  name: p.name,
+  initials: initials(p.name),
+  color: p.color,
+  avatarUrl: p.avatarUrl,
+  headline: p.headline,
+  expertise: p.expertise,
+  stats: instructorStats(t, p),
+});
+
+export function instructorDetail(t: TenantData, p: InstructorProfileRow): InstructorDetail {
+  const excerpt = bioExcerpt(p.bioHtml);
+  return {
+    ...instructorSummary(t, p),
+    coverUrl: p.coverUrl,
+    bioHtml: p.bioHtml,
+    bioExcerpt: excerpt,
+    credentials: p.credentials,
+    socialLinks: p.socialLinks,
+    website: p.website,
+    courses: profileCourses(t, p).map((c) => courseSummary(t, c)),
+    seo: {
+      title: p.seoTitle || p.name,
+      description: p.seoDescription || excerpt.slice(0, 160) || p.headline,
+      imageUrl: p.coverUrl ?? p.avatarUrl,
+    },
+    updatedAt: p.updatedAt,
+  };
+}
+
+/** A course's `instructor`: the visible profile's name, photo and slug; otherwise the member's name, no link. */
+function courseInstructor(t: TenantData, c: CourseRow): CourseInstructor {
+  const slug = teacherSlug(t, c);
+  const profile = visibleProfile(t, slug);
+  if (profile) return { ...person(profile.name, profile.color), avatarUrl: profile.avatarUrl, slug: profile.slug };
+  const member = t.instructorProfiles?.find((p) => p.slug === slug);
+  return { ...person(member?.name ?? t.instructor.name, member?.color ?? t.instructor.color), slug: null };
+}
+
+/** The course page's instructor block (the profile's excerpt and stats, or the name only). */
+function courseInstructorProfile(t: TenantData, c: CourseRow): InstructorProfile {
+  const profile = visibleProfile(t, teacherSlug(t, c));
+  if (!profile)
+    return { role: 'Instructor', bio: '', studentCount: 0, slug: null, headline: '', courseCount: 0, rating: null, reviewCount: 0 };
+  const stats = instructorStats(t, profile);
+  return {
+    role: 'Instructor',
+    bio: bioExcerpt(profile.bioHtml),
+    studentCount: stats.learnerCount,
+    slug: profile.slug,
+    headline: profile.headline,
+    courseCount: stats.courseCount,
+    rating: stats.rating,
+    reviewCount: stats.reviewCount,
+  };
+}
 
 export function courseSummary(t: TenantData, c: CourseRow): CourseSummary {
   const cat = t.categories.find((x) => x.slug === c.categorySlug)!;
@@ -26,14 +133,21 @@ export function courseSummary(t: TenantData, c: CourseRow): CourseSummary {
     category: { slug: cat.slug, name: cat.name },
     cover: { url: null, color: c.coverColor, alt: c.title },
     level: c.level,
-    instructor: person(t.instructor.name, t.instructor.color),
+    instructor: courseInstructor(t, c),
     rating: c.rating,
     reviewCount: c.reviewCount,
     studentCount: c.studentCount,
     lessonCount: lessonCount(c),
     durationMinutes: c.durationMinutes,
-    price: money(t, c.price),
-    paymentPlan: { installments: 3, installmentPrice: money(t, installmentAmount(c.price)) },
+    // A subscription's price is per month, pay what you want's the suggestion (Laravel's CatalogPresenter::summary).
+    price: money(t, c.pricing?.model === 'subscription' ? c.pricing.monthlyPrice : c.price),
+    pricing: {
+      model: c.pricing?.model ?? (c.price === 0 ? 'free' : 'one_time'),
+      interval: c.pricing?.model === 'subscription' ? 'month' : null,
+      minimumPrice: c.pricing?.model === 'pay_what_you_want' ? money(t, c.pricing.minimumPrice) : null,
+    },
+    // The mock offers 3 instalments on every one-time course (Laravel: only Payment plan courses).
+    paymentPlan: c.pricing ? null : { installments: 3, installmentPrice: money(t, installmentAmount(c.price)) },
     featured: c.featured,
     updatedAt: c.updatedAt,
   };
@@ -46,10 +160,11 @@ const outline = (l: LessonRow): LessonOutline => ({
   durationSeconds: l.durationSeconds,
   questionCount: l.type === 'quiz' ? l.questions.length : null,
   freePreview: l.freePreview,
+  summary: l.summary ?? null,
 });
 
 export function courseDetail(t: TenantData, c: CourseRow): CourseDetail {
-  const preview = allLessons(c).find((x) => x.lesson.freePreview)?.lesson;
+  const preview = previewLesson(c);
   return {
     ...courseSummary(t, c),
     description: c.description,
@@ -58,11 +173,18 @@ export function courseDetail(t: TenantData, c: CourseRow): CourseDetail {
     audience: c.audience,
     faqs: c.faqs,
     modules: c.modules.map((m) => ({ id: m.id, title: m.title, lessons: m.lessons.map(outline) })),
-    instructorProfile: { role: t.instructor.role, bio: t.instructor.bio, studentCount: t.instructor.studentCount },
+    instructorProfile: courseInstructorProfile(t, c),
     guaranteeDays: t.membership.guaranteeDays,
     certificate: t.site.features.certificates,
     community: t.site.features.community,
-    preview: preview ? { lessonId: preview.id, title: preview.title, posterUrl: null } : null,
+    preview: preview ? { lessonId: preview.id, title: preview.title, type: preview.type, posterUrl: null } : null,
+    previews: previewLessons(c).map((l) => ({
+      lessonId: l.id,
+      title: l.title,
+      type: l.type,
+      durationSeconds: l.durationSeconds,
+      posterUrl: null,
+    })),
     reviews: t.reviews
       .filter((r) => r.courseId === c.id)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))

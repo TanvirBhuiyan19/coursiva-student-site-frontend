@@ -14,7 +14,7 @@ export function CardEnrolledBadge({ slug }: { slug: string }) {
 }
 
 /** Guests see price + "View →". Enrolled learners see progress (catalog) or Continue/Completed (featured). */
-export function CardFooterState({ slug, price, variant }: { slug: string; price: string; variant: 'featured' | 'catalog' }) {
+export function CardFooterState({ slug, price, variant }: { slug: string; price: string | null; variant: 'featured' | 'catalog' }) {
   const t = useTranslations('catalog');
   const e = useEnrollmentFor(slug);
 
@@ -39,7 +39,7 @@ export function CardFooterState({ slug, price, variant }: { slug: string; price:
   const done = e?.progress.percent === 100;
   return (
     <div className={styles.footer}>
-      <span className={styles.price}>{price}</span>
+      {price === null ? <span /> : <span className={styles.price}>{price}</span>}
       {e ? (
         <Link href={routes.player(slug)} className={styles.state} data-done={done}>
           {done ? t('completedCta') : t('continueCta')}

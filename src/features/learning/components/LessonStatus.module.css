@@ -1,0 +1,107 @@
+/* Course builder v2 O4 in the player: locked lessons, completion rules, Live lessons. */
+.locked {
+  max-width: 560px;
+  margin: 48px auto;
+  padding: 32px 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface-soft);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.lockIcon {
+  width: 28px;
+  height: 28px;
+  color: var(--tx-muted);
+}
+.lockedFor {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--tx-muted);
+}
+.lockedTitle {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.lockedTitle:focus {
+  outline: none;
+}
+.lockedWhy {
+  font-size: 15px;
+  color: var(--tx2);
+  margin-bottom: 6px;
+}
+
+.done {
+  flex-shrink: 0;
+}
+.completion {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+  max-width: 320px;
+}
+.completionText {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--tx2);
+}
+
+.live {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+.liveHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.liveTitle {
+  font-size: 18px;
+  font-weight: 800;
+}
+.liveMeta {
+  font-size: 14px;
+  color: var(--tx2);
+}
+.countdown {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tx-strong);
+}
+.liveHint {
+  font-size: 13.5px;
+  color: var(--tx-muted);
+}
+.recording {
+  width: 100%;
+  margin-top: 8px;
+}
+.recordingTitle {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 719px) {
+  .completion {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
+  .live {
+    padding: 18px 16px;
+  }
+}

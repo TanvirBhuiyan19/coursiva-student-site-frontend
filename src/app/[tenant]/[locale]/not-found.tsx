@@ -1,5 +1,6 @@
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
+import { NotFoundReport } from '@/features/seo/components/NotFoundReport';
 import { routes } from '@/lib/routes';
 
 export default function NotFound() {
@@ -7,6 +8,7 @@ export default function NotFound() {
   return (
     <div className="container page" style={{ textAlign: 'center', maxWidth: 560 }}>
       <meta name="robots" content="noindex" />
+      <NotFoundReport />
       <h1 className="h1-sm">{t('title')}</h1>
       <p className="lead" style={{ marginTop: 10 }}>
         {t('body')}

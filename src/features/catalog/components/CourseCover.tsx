@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import type { CSSProperties, ReactNode } from 'react';
+import { isOptimizableImage } from '@/config/image-hosts';
 import type { Cover } from '@/lib/api/types';
 
 /**
@@ -35,7 +36,17 @@ export function CourseCover({
   };
   return (
     <div className={className} style={style}>
-      {cover.url && <Image src={cover.url} alt={cover.alt} fill sizes={sizes} priority={priority} style={{ objectFit: 'cover' }} />}
+      {cover.url && (
+        <Image
+          src={cover.url}
+          alt={cover.alt}
+          fill
+          sizes={sizes}
+          priority={priority}
+          style={{ objectFit: 'cover' }}
+          unoptimized={!isOptimizableImage(cover.url)}
+        />
+      )}
       {children}
     </div>
   );

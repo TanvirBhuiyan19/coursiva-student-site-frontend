@@ -316,10 +316,107 @@
 .like[aria-pressed='true'] {
   color: var(--brand);
 }
-.replies {
+.replies,
+.report {
+  border: none;
+  background: none;
+  padding: 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--tx3);
+  cursor: pointer;
+}
+.replies:hover,
+.report:hover:not(:disabled) {
+  color: var(--tx-strong);
+  text-decoration: underline;
+}
+.report {
+  margin-inline-start: auto;
+}
+.report:disabled {
+  cursor: default;
+}
+.thread {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.threadEmpty {
+  font-size: 13px;
+  color: var(--tx-muted);
+}
+.replyList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.reply {
+  display: flex;
+  gap: 10px;
+}
+.replyHead {
+  font-size: 13px;
+}
+.replyBody {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--tx-strong);
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+.replyForm {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  margin-top: 12px;
+}
+.replyForm textarea {
+  width: 100%;
+}
+.heldNote {
+  margin-top: 12px;
+  background: var(--brand-tint);
+  color: var(--tx-strong);
+  border: 1px solid var(--line);
+}
+.dialog {
+  width: min(480px, calc(100vw - 32px));
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-pop);
+}
+.dialog::backdrop {
+  background: var(--scrim);
+}
+.dialogTitle {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+}
+.dialogText {
+  font-size: 14px;
+  color: var(--tx3);
+  margin-top: 6px;
+}
+.dialogForm {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+.reasons {
+  display: grid;
+  gap: 8px;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 .empty {
   padding: 32px;

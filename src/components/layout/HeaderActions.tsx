@@ -5,21 +5,35 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/icons';
 import { useMarkAllRead, useNotifications } from '@/features/account/api';
 import { useSession } from '@/features/auth/api';
+import { siteAvailable } from '@/features/tenant/normalize';
 import type { Site } from '@/features/tenant/types';
 import { routes } from '@/lib/routes';
 import { useFormat } from '@/lib/useFormat';
 import { MobileDrawer } from './MobileDrawer';
 import type { NavItem } from './NavLinks';
 import styles from './SiteHeader.module.css';
+import { avatarBackground, UserAvatar } from './UserAvatar';
 
-type HeaderSite = Pick<Site, 'name' | 'logoUrl' | 'features'>;
+type HeaderSite = Pick<Site, 'name' | 'logoUrl' | 'features' | 'unavailable'>;
 
 /** Learner-specific header controls. Renders nothing personal until the session query resolves (no layout shift). */
-export function HeaderActions({ site, navItems }: { site: HeaderSite; navItems: NavItem[] }) {
+export function HeaderActions({
+  site,
+  navItems,
+  showCart = true,
+  showNotifications = true,
+}: {
+  site: HeaderSite;
+  navItems: NavItem[];
+  /** Site builder → Header → cart / notifications switches. */
+  showCart?: boolean;
+  showNotifications?: boolean;
+}) {
   const t = useTranslations('header');
   const { user, isLoading } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const cartCount = user?.cartCount ?? 0;
+  const liveOn = siteAvailable(site, 'live_classes');
 
   return (
     <div className={styles.actions}>
@@ -27,34 +41,41 @@ export function HeaderActions({ site, navItems }: { site: HeaderSite; navItems: 
       {user && site.features.streaks && user.streakDays > 0 && (
         <span className={`pill pill-brand ${styles.hideTablet}`}>{t('streak', { days: user.streakDays })}</span>
       )}
+      {user && liveOn && (
+        <Link href={routes.liveSchedule} className={`icon-btn ${styles.hideTablet}`} aria-label={t('live')} title={t('live')}>
+          <Icon name="calendar" size={15} />
+        </Link>
+      )}
       {user && (
         <Link href={routes.wishlist} className={`icon-btn ${styles.hideTablet}`} aria-label={t('wishlist')} title={t('wishlist')}>
           <Icon name="heart" size={15} />
         </Link>
       )}
-      <Link
-        href={routes.cart}
-        className="icon-btn"
-        aria-label={cartCount ? t('cartCount', { count: cartCount }) : t('cart')}
-        title={t('cart')}
-      >
-        <Icon name="cart" size={15} />
-        {cartCount > 0 && (
-          <span className="badge-count" aria-hidden="true">
-            {cartCount}
-          </span>
-        )}
-      </Link>
-      {user && <Notifications unread={user.unreadNotifications} />}
+      {showCart && (
+        <Link
+          href={routes.cart}
+          className="icon-btn"
+          aria-label={cartCount ? t('cartCount', { count: cartCount }) : t('cart')}
+          title={t('cart')}
+        >
+          <Icon name="cart" size={15} />
+          {cartCount > 0 && (
+            <span className="badge-count" aria-hidden="true">
+              {cartCount}
+            </span>
+          )}
+        </Link>
+      )}
+      {user && showNotifications && <Notifications unread={user.unreadNotifications} />}
       {user && (
         <Link
           href={routes.account}
           className={`avatar ${styles.avatarLink} ${styles.hideMobile}`}
-          style={{ background: user.color }}
+          style={{ background: avatarBackground(user) }}
           aria-label={t('account')}
           title={user.name}
         >
-          {user.initials}
+          <UserAvatar user={user} />
         </Link>
       )}
       {!user && !isLoading && (

@@ -1,18 +1,14 @@
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
-
-/**
- * Security headers for every response. A nonce-based CSP would force every page to render dynamically (no ISR), so
- * the policy here locks down framing, plugins, base URIs and form targets without a script-src; add one with hashes
- * if/when a third-party script policy is agreed.
- */
-const securityHeaders = [
-  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
-  { key: 'X-Content-Type-Options', value: 'nosniff' },
-  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(self)' },
-  { key: 'Content-Security-Policy', value: "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'" },
-];
+import {
+  apiHeaders,
+  baseHeaders,
+  EMBED_SOURCE,
+  embedHeaders,
+  PAGE_SOURCE,
+  pageHeaders,
+  previewStaticHeaders,
+} from './src/lib/securityHeaders';
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
@@ -20,11 +16,24 @@ const nextConfig: NextConfig = {
   // Tenants develop on <slug>.localhost (e.g. http://amplify.localhost:3000).
   allowedDevOrigins: ['*.localhost'],
   images: {
-    // Tenant uploads are served from the platform CDN.
-    remotePatterns: [{ protocol: 'https', hostname: 'cdn.coursiva.app' }],
+    // Uploaded images are rendered straight from the storage bucket / CDN (src/config/image-hosts.ts): this server
+    // never fetches, resizes or caches them, so no remote host is allowed here.
+    remotePatterns: [],
     formats: ['image/avif', 'image/webp'],
   },
-  headers: () => Promise.resolve([{ source: '/:path*', headers: securityHeaders }]),
+  // Security headers (src/lib/securityHeaders.ts). Pages are never framed (bar the lead-form embed frame); the staff
+  // preview's frame-ancestors (the dashboard origin, from env) is set by the proxy.
+  headers: () =>
+    Promise.resolve([
+      { source: '/:path*', headers: baseHeaders },
+      { source: PAGE_SOURCE, headers: pageHeaders },
+      { source: '/api/:path*', headers: apiHeaders },
+      { source: '/sanctum/:path*', headers: apiHeaders },
+      { source: '/preview', headers: previewStaticHeaders },
+      { source: '/preview/:path*', headers: previewStaticHeaders },
+      // The lead-form embed frame: any website may frame it (src/lib/securityHeaders.ts).
+      { source: EMBED_SOURCE, headers: embedHeaders },
+    ]),
 };
 
 export default createNextIntlPlugin('./src/i18n/request.ts')(nextConfig);

@@ -1,0 +1,372 @@
+/* ── Index ─────────────────────────────────────────────────────────────── */
+.intro {
+  max-width: 640px;
+}
+.grid {
+  margin-top: 32px;
+}
+.card {
+  position: relative;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  height: 100%;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+.card:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-card-hover);
+}
+.cardBody {
+  min-width: 0;
+}
+.cardName {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.stretched {
+  color: var(--tx);
+}
+.stretched::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.stretched:focus-visible {
+  outline: none;
+}
+.stretched:focus-visible::after {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+  border-radius: var(--radius-lg);
+}
+.cardHeadline {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--tx2);
+}
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--tx3);
+}
+.cardTags,
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+.more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 32px;
+}
+.empty {
+  margin-top: 28px;
+  padding: 40px;
+  text-align: center;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
+  color: var(--tx3);
+}
+
+/* ── Profile ───────────────────────────────────────────────────────────── */
+.profile {
+  padding-bottom: 80px;
+}
+.cover {
+  position: relative;
+  height: 240px;
+  margin-top: 24px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+.head {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  margin-top: -64px;
+  padding-inline: 32px;
+  position: relative;
+}
+.headAvatar {
+  border: 4px solid var(--surface);
+  box-shadow: var(--shadow-pop);
+}
+.headText {
+  min-width: 0;
+  padding-bottom: 4px;
+}
+.back {
+  display: inline-block;
+  margin-top: 72px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tx3);
+}
+.back:hover {
+  color: var(--brand-link);
+}
+.name {
+  margin-top: 4px;
+}
+.headline {
+  margin-top: 6px;
+  font-size: 17px;
+  color: var(--tx2);
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.social,
+.website {
+  height: 34px;
+  border-radius: 99px;
+  border: 1px solid var(--line-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--tx2);
+  font-size: 13px;
+  font-weight: 700;
+}
+.social {
+  width: 34px;
+}
+.website {
+  padding-inline: 14px;
+}
+.social:hover,
+.website:hover {
+  border-color: var(--brand);
+  color: var(--brand-link);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 32px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface-soft);
+}
+.stats > div {
+  padding: 18px 22px;
+}
+.stats > div + div {
+  border-inline-start: 1px solid var(--line);
+}
+.stats dt {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tx3);
+}
+.stats dd {
+  margin-top: 4px;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--tx);
+}
+.statRating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+.statNote {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--tx3);
+}
+.stats dd.statNone {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tx3);
+  padding-top: 8px;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 48px;
+  margin-top: 44px;
+}
+.main {
+  min-width: 0;
+}
+.side {
+  display: grid;
+  align-content: start;
+  gap: 28px;
+}
+.sideTitle {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tx3);
+}
+.credentials {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+.credentials li {
+  display: grid;
+  gap: 2px;
+  padding-inline-start: 12px;
+  border-inline-start: 3px solid var(--brand);
+}
+.credTitle {
+  font-weight: 700;
+  color: var(--tx);
+}
+.credSub {
+  font-size: 13.5px;
+  color: var(--tx3);
+}
+
+/* The API's sanitised bio HTML (CommonMark elements only). */
+.prose {
+  margin-top: 16px;
+  font-size: 16.5px;
+  line-height: 1.7;
+  color: var(--tx-strong);
+  overflow-wrap: anywhere;
+}
+.prose > * + * {
+  margin-top: 1em;
+}
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  font-family: var(--font-display);
+  font-size: 1.15em;
+  line-height: 1.3;
+  margin-top: 1.6em;
+}
+.prose a {
+  color: var(--brand-link);
+  text-decoration: underline;
+}
+.prose blockquote {
+  border-inline-start: 3px solid var(--brand);
+  padding-inline-start: 16px;
+  color: var(--tx2);
+}
+.prose ul,
+.prose ol {
+  padding-inline-start: 1.4em;
+}
+.prose ul {
+  list-style: disc;
+}
+.prose ol {
+  list-style: decimal;
+}
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--line);
+}
+.prose code {
+  background: var(--surface-sunk);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.prose pre {
+  background: var(--surface-sunk);
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+.prose pre code {
+  padding: 0;
+  background: none;
+}
+.prose table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+.prose th,
+.prose td {
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+  text-align: start;
+}
+
+.courses {
+  margin-top: 56px;
+}
+.courses > ul {
+  margin-top: 20px;
+}
+
+@media (max-width: 1023px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+}
+
+@media (max-width: 719px) {
+  .card {
+    padding: 16px;
+  }
+  .cover {
+    height: 150px;
+    margin-top: 12px;
+    border-radius: var(--radius-lg);
+  }
+  .head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: -48px;
+    padding-inline: 16px;
+  }
+  .headAvatar {
+    width: 96px !important;
+    height: 96px !important;
+    font-size: 32px !important;
+  }
+  .back {
+    margin-top: 0;
+  }
+  .stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .stats > div + div {
+    border-inline-start: none;
+    border-top: 1px solid var(--line);
+  }
+}

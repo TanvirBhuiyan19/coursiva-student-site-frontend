@@ -3,15 +3,17 @@ import { getCookie } from 'hono/cookie';
 import { amplify } from '../seed/amplify';
 import { northwind } from '../seed/northwind';
 import { polyglot } from '../seed/polyglot';
+import { hideout } from '../seed/hideout';
 import type { TenantData, UserRow } from './records';
 
 /**
  * In-memory "database", one isolated dataset per tenant (row-level isolation: every route reads through `tenantOf`).
  * State lives for the life of the process; `POST /__mock/reset` restores the seed (used by e2e tests).
  */
-const seeds: Record<string, () => TenantData> = { amplify, northwind, polyglot };
+const seeds: Record<string, () => TenantData> = { amplify, northwind, polyglot, hideout };
 let tenants = new Map<string, TenantData>();
-export const sessions = new Map<string, { tenant: string; userId: string }>();
+/** `saml`: signed in through SAML SSO (sign-out then also signs out of the IdP, like Laravel's single logout). */
+export const sessions = new Map<string, { tenant: string; userId: string; saml?: boolean }>();
 
 export function reset() {
   tenants = new Map(Object.entries(seeds).map(([slug, seed]) => [slug, seed()]));

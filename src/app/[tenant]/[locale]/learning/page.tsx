@@ -11,5 +11,5 @@ export async function generateMetadata(): Promise<Metadata> {
 /** Signed-in home. The page shell is static; learner data loads in the browser (the proxy has already gated guests). */
 export default async function LearningPage() {
   const site = await getCurrentSite();
-  return <Dashboard organizer={site.name} showCertificates={site.features.certificates} />;
+  return <Dashboard organizer={{ name: site.name, email: site.supportEmail }} showCertificates={site.features.certificates} />;
 }

@@ -1,9 +1,20 @@
 import Image from 'next/image';
+import { isOptimizableImage } from '@/config/image-hosts';
 import type { Site } from '@/features/tenant/types';
 
 /** The tenant's logo, or its initial on a brand-coloured tile. Decorative: the adjacent name labels it. */
 export function BrandMark({ site, size }: { site: Pick<Site, 'name' | 'logoUrl'>; size: number }) {
-  if (site.logoUrl) return <Image src={site.logoUrl} alt="" width={size} height={size} style={{ borderRadius: size * 0.3 }} />;
+  if (site.logoUrl)
+    return (
+      <Image
+        src={site.logoUrl}
+        alt=""
+        width={size}
+        height={size}
+        unoptimized={!isOptimizableImage(site.logoUrl)}
+        style={{ borderRadius: size * 0.3 }}
+      />
+    );
   return (
     <span
       aria-hidden="true"

@@ -6,7 +6,13 @@ import { useEffect, useId, useState, type SyntheticEvent } from 'react';
 import { ApiError } from '@/lib/api/errors';
 import { routes } from '@/lib/routes';
 import { useForgotPassword, useLogin, useRegister, useSession } from '../api';
+import { OAUTH_REASONS, PROVIDER_NAMES, SSO_ERRORS, authFailure } from '../failures';
+import { SESSION_EXPIRED } from '../sessionExpiry';
+import type { AuthScreen } from '@/features/tenant/types';
 import styles from './Auth.module.css';
+
+/** The school's own text when it typed some, else ours. */
+const or = (custom: string | undefined, fallback: string) => (custom !== undefined && custom !== '' ? custom : fallback);
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -25,7 +31,21 @@ function passwordStrength(pw: string): 0 | 1 | 2 | 3 {
 
 type Errors = Partial<Record<'name' | 'email' | 'password' | 'form', string>>;
 
-export function AuthForm({ mode, oauth }: { mode: 'signin' | 'signup'; oauth: 'google'[] }) {
+export function AuthForm({
+  mode,
+  oauth: providers,
+  sso = false,
+  screen = null,
+  group,
+}: {
+  mode: 'signin' | 'signup';
+  oauth: string[];
+  sso?: boolean;
+  /** The group invite link's token (`/join/{token}`): the new account takes a seat in that group. */
+  group?: string;
+  /** The sign-in screen as the school configured it in the site builder (`GET /site` → `screens.auth`). */
+  screen?: AuthScreen | null;
+}) {
   const t = useTranslations('auth');
   const id = useId();
   const params = useSearchParams();
@@ -36,8 +56,29 @@ export function AuthForm({ mode, oauth }: { mode: 'signin' | 'signup'; oauth: 'g
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
-  const [errors, setErrors] = useState<Errors>(params.get('error') === 'oauth' ? { form: t('oauthFailed') } : {});
+  const [errors, setErrors] = useState<Errors>(() => {
+    const failure = authFailure(params);
+    if (!failure) return {};
+    if (failure.kind === 'sso')
+      return {
+        form: (SSO_ERRORS as readonly string[]).includes(failure.reason)
+          ? t(`ssoErrors.${failure.reason as (typeof SSO_ERRORS)[number]}`)
+          : t('ssoErrors.generic'),
+      };
+    return {
+      form:
+        failure.reason && (OAUTH_REASONS as readonly string[]).includes(failure.reason)
+          ? t(`oauthReasons.${failure.reason as (typeof OAUTH_REASONS)[number]}`)
+          : t('oauthFailed'),
+    };
+  });
   const isUp = mode === 'signup';
+  // Sent here by an expired session (features/auth/sessionExpiry): say so, then bring them back to `next`.
+  const expired = !isUp && params.get('reason') === SESSION_EXPIRED;
+  // Builder switches: the create-account tab, "Continue with Google" and the forgot-password link.
+  const showSignup = screen?.signup !== false;
+  const oauth = screen?.google === false ? providers.filter((p) => p !== 'google') : providers;
+  const custom = !isUp && screen ? screen : null;
   const pending = login.isPending || register.isPending;
   const strength = passwordStrength(password);
   const { isSignedIn } = useSession();
@@ -66,27 +107,35 @@ export function AuthForm({ mode, oauth }: { mode: 'signin' | 'signup'; oauth: 'g
     // Full navigation: the session cookie just changed, and the client router may hold prefetched guest responses
     // (e.g. the proxy redirect from /learning to sign-in). Nothing cached for the guest should survive sign-in.
     const done = () => hardNavigate(next);
-    if (isUp) register.mutate({ name: name.trim(), email: email.trim(), password }, { onSuccess: done, onError });
+    if (isUp)
+      register.mutate({ name: name.trim(), email: email.trim(), password, ...(group ? { group } : {}) }, { onSuccess: done, onError });
     else login.mutate({ email: email.trim(), password, remember }, { onSuccess: done, onError });
   };
 
   return (
     <>
-      <nav className={styles.switch} aria-label={t('switchLabel')}>
-        <Link href={routes.signIn(params.get('next') ?? undefined)} aria-current={!isUp ? 'page' : undefined}>
-          {t('signInTab')}
-        </Link>
-        <Link href={routes.signUp(params.get('next') ?? undefined)} aria-current={isUp ? 'page' : undefined}>
-          {t('signUpTab')}
-        </Link>
-      </nav>
+      {(showSignup || isUp) && (
+        <nav className={styles.switch} aria-label={t('switchLabel')}>
+          <Link href={routes.signIn(params.get('next') ?? undefined)} aria-current={!isUp ? 'page' : undefined}>
+            {t('signInTab')}
+          </Link>
+          <Link href={routes.signUp(params.get('next') ?? undefined)} aria-current={isUp ? 'page' : undefined}>
+            {t('signUpTab')}
+          </Link>
+        </nav>
+      )}
       <div className={styles.card}>
-        <h1 className={styles.title}>{isUp ? t('signUpTitle') : t('signInTitle')}</h1>
-        <p className={styles.sub}>{isUp ? t('signUpSub') : t('signInSub')}</p>
+        <h1 className={styles.title}>{or(custom?.title, isUp ? t('signUpTitle') : t('signInTitle'))}</h1>
+        <p className={styles.sub}>{or(custom?.subtitle, isUp ? t('signUpSub') : t('signInSub'))}</p>
         <form onSubmit={submit} noValidate className={styles.form}>
           {errors.form && (
             <p className="alert alert-bad" role="alert">
               {errors.form}
+            </p>
+          )}
+          {expired && !errors.form && (
+            <p className={`alert ${styles.notice}`} role="status">
+              {t('sessionExpired')}
             </p>
           )}
           {isUp && (
@@ -160,24 +209,39 @@ export function AuthForm({ mode, oauth }: { mode: 'signin' | 'signup'; oauth: 'g
                 <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
                 {t('remember')}
               </label>
-              <Link href={routes.forgotPassword} className={styles.forgot}>
-                {t('forgot')}
-              </Link>
+              {screen?.forgot !== false && (
+                <Link href={routes.forgotPassword} className={styles.forgot}>
+                  {t('forgot')}
+                </Link>
+              )}
             </div>
           )}
           <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={pending}>
-            {isUp ? t('signUpCta') : t('signInCta')}
+            {or(custom?.button, isUp ? t('signUpCta') : t('signInCta'))}
           </button>
         </form>
-        {oauth.includes('google') && (
+        {(oauth.length > 0 || sso) && (
           <>
             <div className={styles.or}>
               <span>{t('or')}</span>
             </div>
-            {/* A full-page navigation: the OAuth round-trip happens on the API and lands back on `next`. */}
-            <a href={`/api/v1/auth/oauth/google/redirect?next=${encodeURIComponent(next)}`} className="btn btn-outline btn-block btn-lg">
-              {t('google')}
-            </a>
+            <div className={styles.providers}>
+              {/* Full-page navigations: the OAuth / SAML round-trip happens on the API and lands back on `next`. */}
+              {oauth.map((p) => (
+                <a
+                  key={p}
+                  href={`/api/v1/auth/oauth/${encodeURIComponent(p)}/redirect?next=${encodeURIComponent(next)}`}
+                  className="btn btn-outline btn-block btn-lg"
+                >
+                  {p === 'google' ? t('google') : t('oauthWith', { provider: PROVIDER_NAMES[p] ?? p })}
+                </a>
+              ))}
+              {sso && (
+                <a href={`/api/v1/auth/saml/login?next=${encodeURIComponent(next)}`} className="btn btn-outline btn-block btn-lg">
+                  {t('sso')}
+                </a>
+              )}
+            </div>
           </>
         )}
       </div>

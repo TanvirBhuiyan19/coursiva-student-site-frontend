@@ -5,6 +5,7 @@ import { useId, useState } from 'react';
 import { useToast } from '@/components/toast/Toaster';
 import { useSession } from '@/features/auth/api';
 import { CourseCover } from '@/features/catalog/components/CourseCover';
+import { isCartable } from '@/features/catalog/pricing';
 import { routes } from '@/lib/routes';
 import { useFormat } from '@/lib/useFormat';
 import { useAddToCart, useCart, useQuote, useRemoveFromCart, useToggleWishlist } from '../api';
@@ -26,7 +27,7 @@ export function CartView() {
   const [coupon, setCoupon] = useState<string | null>(null);
   const hasItems = !!cart?.items.length;
   const { data: quote } = useQuote(
-    { target: { kind: 'cart' }, plan: 'full', couponCode: coupon, orderBump: false, seats: 1, country: '' },
+    { target: { kind: 'cart' }, plan: 'full', couponCode: coupon, orderBump: false, seats: 1, country: '', giftCard: null },
     hasItems,
   );
 
@@ -180,16 +181,23 @@ export function CartView() {
                     {c.title}
                   </Link>
                   <div className={styles.recRow}>
-                    <span className="num">{f.money(c.price)}</span>
-                    <button
-                      type="button"
-                      className="btn btn-outline btn-sm"
-                      disabled={add.isPending}
-                      aria-label={t('addNamed', { title: c.title })}
-                      onClick={() => add.mutate(c.slug, { onSuccess: () => toast(t('added', { title: c.title })) })}
-                    >
-                      {t('add')}
-                    </button>
+                    <span className="num">{f.coursePrice(c.price, c.pricing)}</span>
+                    {isCartable(c) ? (
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        disabled={add.isPending}
+                        aria-label={t('addNamed', { title: c.title })}
+                        onClick={() => add.mutate(c.slug, { onSuccess: () => toast(t('added', { title: c.title })) })}
+                      >
+                        {t('add')}
+                      </button>
+                    ) : (
+                      // Subscription, pay-what-you-want and membership courses sell from their own page.
+                      <Link href={routes.course(c.slug)} className="btn btn-outline btn-sm" aria-label={t('viewNamed', { title: c.title })}>
+                        {t('view')}
+                      </Link>
+                    )}
                   </div>
                 </div>
               </li>

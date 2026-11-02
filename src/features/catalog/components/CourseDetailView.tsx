@@ -3,9 +3,11 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Icon, type IconName } from '@/components/icons';
 import { Rating } from '@/components/Rating';
 import { stars } from '@/lib/format';
+import { Markdown, markdownToPlain } from '@/lib/markdown';
 import { routes } from '@/lib/routes';
 import { useFormat } from '@/lib/useFormat';
 import type { CourseDetail, LessonOutline, LessonType } from '../types';
+import { InstructorAvatar } from '@/features/instructors/components/InstructorAvatar';
 import { CourseCard } from './CourseCard';
 import { ExpandAll, MobileBuyBar, PurchaseCard, SectionNav, WriteReview, PreviewButton } from './CourseDetailClient';
 import styles from './CourseDetail.module.css';
@@ -33,7 +35,14 @@ export function CourseDetailView({ course }: { course: CourseDetail }) {
       : l.durationSeconds
         ? f.clock(l.durationSeconds)
         : null;
-  const moduleMinutes = (lessons: LessonOutline[]) => Math.round(lessons.reduce((s, l) => s + (l.durationSeconds ?? 0), 0) / 60);
+  // Any length at all reads as at least a minute (Udemy shows "1min", never nothing, for a short section).
+  const moduleMinutes = (lessons: LessonOutline[]) => {
+    const seconds = lessons.reduce((s, l) => s + (l.durationSeconds ?? 0), 0);
+    return seconds > 0 ? Math.max(1, Math.round(seconds / 60)) : 0;
+  };
+  const profile = course.instructorProfile;
+  const profileSlug = course.instructor.slug ?? profile.slug;
+  const profileHref = profileSlug ? routes.instructor(profileSlug) : null;
 
   const sections = [
     { id: 'overview', label: t('navOverview') },
@@ -64,9 +73,11 @@ export function CourseDetailView({ course }: { course: CourseDetail }) {
               <li>
                 <Link href={routes.courses}>{tn('courses')}</Link>
               </li>
-              <li>
-                <Link href={routes.category(course.category.slug)}>{course.category.name}</Link>
-              </li>
+              {course.category && (
+                <li>
+                  <Link href={routes.category(course.category.slug)}>{course.category.name}</Link>
+                </li>
+              )}
             </ol>
           </nav>
           <div className={styles.badges}>
@@ -88,20 +99,26 @@ export function CourseDetailView({ course }: { course: CourseDetail }) {
             <span>{t('learners', { count: course.studentCount })}</span>
           </div>
           <p className={styles.byline}>
-            <span
-              className="avatar"
-              style={{ width: 28, height: 28, fontSize: 11, background: course.instructor.color }}
-              aria-hidden="true"
-            >
-              {course.instructor.initials}
-            </span>
+            {/* With a published profile the photo and name link to it; otherwise the name jumps to the instructor block. */}
+            {profileHref ? (
+              <Link href={profileHref} tabIndex={-1} aria-hidden="true" className={styles.avatarLink}>
+                <InstructorAvatar person={course.instructor} size={28} fontSize={11} priority />
+              </Link>
+            ) : (
+              <InstructorAvatar person={course.instructor} size={28} fontSize={11} priority />
+            )}
             {t.rich('createdBy', {
               name: course.instructor.name,
-              link: (c) => (
-                <a href="#instructor" className={styles.heroLink}>
-                  {c}
-                </a>
-              ),
+              link: (c) =>
+                profileHref ? (
+                  <Link href={profileHref} className={styles.heroLink}>
+                    {c}
+                  </Link>
+                ) : (
+                  <a href="#instructor" className={styles.heroLink}>
+                    {c}
+                  </a>
+                ),
             })}
           </p>
           <ul className={styles.meta}>
@@ -143,7 +160,10 @@ export function CourseDetailView({ course }: { course: CourseDetail }) {
                 ))}
               </ul>
             </div>
-            {course.description !== course.excerpt && <p className={styles.description}>{course.description}</p>}
+            {/* The description is Markdown (dashboard rich text); shown unless it only repeats the hero's excerpt. */}
+            {course.description !== '' && markdownToPlain(course.description) !== course.excerpt && (
+              <Markdown source={course.description} breaks images={false} headingLevel={3} className={`rich-text ${styles.description}`} />
+            )}
           </section>
 
           <section id="curriculum" className={styles.section} aria-labelledby="curriculum-h">
@@ -170,7 +190,7 @@ export function CourseDetailView({ course }: { course: CourseDetail }) {
                       <span className={styles.moduleTitle}>{m.title}</span>
                       <span className={styles.moduleMeta}>
                         {tc('lessons', { count: m.lessons.length })}
-                        {mins > 0 && ` · ${f.duration(mins)}`}
+                        {mins > 0 && ` • ${f.duration(mins)}`}
                       </span>
                     </summary>
                     <ul className={styles.lessons}>
@@ -178,13 +198,39 @@ export function CourseDetailView({ course }: { course: CourseDetail }) {
                         const meta = lessonMeta(l);
                         return (
                           <li key={l.id} className={styles.lesson}>
-                            <Icon name={LESSON_ICON[l.type]} size={15} className={styles.lessonIcon} />
-                            <span className={styles.lessonTitle}>
-                              {l.title}
-                              <span className="sr-only"> ({tc(`lessonTypes.${l.type}`)})</span>
+                            <Icon name={LESSON_ICON[l.type]} size={16} className={styles.lessonIcon} />
+                            <div className={styles.lessonMain}>
+                              {l.summary ? (
+                                // A lesson with a summary expands in place (Udemy's outline), no script needed.
+                                <details className={styles.lessonMore}>
+                                  <summary className={styles.lessonToggle}>
+                                    <span className={styles.lessonTitle}>
+                                      {l.title}
+                                      <span className="sr-only"> ({tc(`lessonTypes.${l.type}`)})</span>
+                                    </span>
+                                    <Icon name="chevronRight" size={14} className={styles.lessonChev} />
+                                  </summary>
+                                  <Markdown
+                                    source={l.summary}
+                                    breaks
+                                    images={false}
+                                    headingLevel={4}
+                                    className={`rich-text ${styles.lessonSummary}`}
+                                  />
+                                </details>
+                              ) : (
+                                <span className={styles.lessonTitle}>
+                                  {l.title}
+                                  <span className="sr-only"> ({tc(`lessonTypes.${l.type}`)})</span>
+                                </span>
+                              )}
+                            </div>
+                            <span className={styles.lessonSide}>
+                              {/* Every free-preview row opens that lesson in the preview modal. */}
+                              {l.freePreview && <PreviewButton course={course} variant="chip" lessonId={l.id} />}
+                              {/* Always present (empty when there's no length), so every row's Preview lines up. */}
+                              <span className={styles.lessonDur}>{meta}</span>
                             </span>
-                            {l.freePreview && course.preview?.lessonId === l.id && <PreviewButton course={course} variant="chip" />}
-                            {meta && <span className={styles.lessonDur}>{meta}</span>}
                           </li>
                         );
                       })}
@@ -225,31 +271,47 @@ export function CourseDetailView({ course }: { course: CourseDetail }) {
               {t('instructorTitle')}
             </h2>
             <div className={styles.instructor}>
-              <span
-                className="avatar"
-                style={{ width: 72, height: 72, fontSize: 24, fontWeight: 800, background: course.instructor.color }}
-                aria-hidden="true"
-              >
-                {course.instructor.initials}
-              </span>
+              {profileHref ? (
+                <Link href={profileHref} tabIndex={-1} aria-hidden="true" className={styles.avatarLink}>
+                  <InstructorAvatar person={course.instructor} size={72} fontSize={24} style={{ fontWeight: 800 }} />
+                </Link>
+              ) : (
+                <InstructorAvatar person={course.instructor} size={72} fontSize={24} style={{ fontWeight: 800 }} />
+              )}
               <div className={styles.instructorBody}>
-                <h3 className={styles.instructorName}>{course.instructor.name}</h3>
-                <p className={styles.instructorRole}>{course.instructorProfile.role}</p>
-                <ul className={styles.instructorStats}>
-                  <li>
-                    <Icon name="users" size={14} />
-                    {t('learners', { count: course.instructorProfile.studentCount })}
-                  </li>
-                  <li>
-                    <span aria-hidden="true" className={styles.starInline}>
-                      ★
-                    </span>
-                    {t('instructorRating', { rating: course.rating.toFixed(1) })}
-                  </li>
-                </ul>
+                <h3 className={styles.instructorName}>
+                  {profileHref ? <Link href={profileHref}>{course.instructor.name}</Link> : course.instructor.name}
+                </h3>
+                {/* Without a published profile the API sends no headline, bio or stats: the name only. */}
+                {profile.headline !== '' && <p className={styles.instructorRole}>{profile.headline}</p>}
+                {profileHref && (
+                  <ul className={styles.instructorStats}>
+                    <li>
+                      <Icon name="users" size={14} />
+                      {t('learners', { count: profile.studentCount })}
+                    </li>
+                    <li>
+                      <Icon name="play" size={14} />
+                      {tc('courses', { count: profile.courseCount })}
+                    </li>
+                    {profile.rating !== null && profile.reviewCount > 0 && (
+                      <li>
+                        <span aria-hidden="true" className={styles.starInline}>
+                          ★
+                        </span>
+                        {t('instructorRating', { rating: profile.rating.toFixed(1), count: profile.reviewCount })}
+                      </li>
+                    )}
+                  </ul>
+                )}
               </div>
             </div>
-            <p className={styles.bio}>{course.instructorProfile.bio}</p>
+            {profile.bio !== '' && <p className={styles.bio}>{profile.bio}</p>}
+            {profileHref && (
+              <Link href={profileHref} className={`btn btn-outline btn-sm ${styles.profileLink}`}>
+                {t('viewProfile', { name: course.instructor.name })}
+              </Link>
+            )}
           </section>
 
           <section id="reviews" className={styles.section} aria-labelledby="reviews-h">

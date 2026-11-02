@@ -37,8 +37,22 @@ export interface Post {
   likes: number;
   liked: boolean;
   replies: number;
+  /** True when the post waits for a moderator (a link from a new member, or enough reports): it isn't in the feed yet. */
+  held?: boolean;
   createdAt: string;
 }
+
+/** `GET /api/v1/community/posts/{id}/replies` — oldest first (up to 200). */
+export interface Reply {
+  id: string;
+  author: Person & { isInstructor: boolean };
+  body: string;
+  createdAt: string;
+}
+
+/** Why a member reports a post (`POST /community/posts/{id}/flags { reason }`). */
+export const FLAG_REASONS = ['spam', 'harassment', 'off_topic', 'other'] as const;
+export type FlagReason = (typeof FLAG_REASONS)[number];
 
 export interface NewPostInput {
   spaceId: string;

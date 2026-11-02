@@ -21,7 +21,7 @@ export async function resolveTenant(host: string): Promise<TenantResolution | nu
   const hit = memo.get(lookup);
   if (hit && hit.expires > Date.now()) return hit.value;
 
-  const res = await fetch(`${env.API_URL}/platform/v1/domains/resolve?host=${encodeURIComponent(lookup)}`, {
+  const res = await fetch(`${env.API_URL}${env.API_RESOLVE_PATH}?host=${encodeURIComponent(lookup)}`, {
     headers: { Accept: 'application/json', Authorization: `Bearer ${env.API_SERVICE_TOKEN}` },
     cache: 'no-store',
   });

@@ -1,27 +1,36 @@
 'use client';
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
-import { useDeferredValue, useId, useState, type SyntheticEvent } from 'react';
+import { useEffect, useId, useState, type SyntheticEvent } from 'react';
 import { useToast } from '@/components/toast/Toaster';
 import { useSession } from '@/features/auth/api';
 import { ApiError } from '@/lib/api/errors';
 import { routes } from '@/lib/routes';
-import { useSupportTicket } from '../api';
-import type { HelpCategory, SupportTopic } from '../types';
+import { useHelpSearch, useSupportTicket } from '../api';
+import type { HelpCategory, HelpSearchResult, SupportTopic } from '../types';
 import styles from './Support.module.css';
 
-/** Help centre: instant client-side filter over the tenant's article categories (all rendered on the server). */
+/** Help centre: the school's article categories (rendered on the server), and search through the API as you type. */
 export function HelpCenter({ categories }: { categories: HelpCategory[] }) {
   const t = useTranslations('support');
   const id = useId();
   const [q, setQ] = useState('');
-  const dq = useDeferredValue(q).trim().toLowerCase();
-  const shown = categories
-    .map((c) => ({
-      ...c,
-      articles: c.articles.filter((a) => !dq || a.title.toLowerCase().includes(dq) || c.title.toLowerCase().includes(dq)),
-    }))
-    .filter((c) => c.articles.length > 0);
+  const [debounced, setDebounced] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(q.trim()), 250);
+    return () => clearTimeout(timer);
+  }, [q]);
+  const active = debounced.split(/\s+/).some((w) => w.length >= 2);
+  const search = useHelpSearch(debounced);
+  // An API without search (or a failed request) falls back to matching the article titles listed on the page.
+  const words = debounced.toLowerCase().split(/\s+/).filter(Boolean);
+  const fallback: HelpSearchResult[] = categories.flatMap((c) =>
+    c.articles
+      .filter((a) => words.every((w) => a.title.toLowerCase().includes(w)))
+      .map((a) => ({ slug: a.slug, title: a.title, category: c.title, excerpt: a.excerpt })),
+  );
+  const results = search.isError ? fallback : search.data;
+  const loading = active && !search.isError && (search.isPending || search.isPlaceholderData);
 
   return (
     <>
@@ -35,27 +44,66 @@ export function HelpCenter({ categories }: { categories: HelpCategory[] }) {
           className="input"
           placeholder={t('searchPlaceholder')}
           value={q}
+          maxLength={100}
           onChange={(e) => setQ(e.target.value)}
         />
       </div>
       <p className="sr-only" aria-live="polite">
-        {dq ? t('results', { count: shown.reduce((n, c) => n + c.articles.length, 0) }) : ''}
+        {active && results && !loading ? t('results', { count: results.length }) : ''}
       </p>
-      {shown.length === 0 ? (
-        <p className={styles.empty}>{t('noResults')}</p>
+      {!active ? (
+        categories.length === 0 ? (
+          <p className={styles.empty}>{t('noArticles')}</p>
+        ) : (
+          <ul className={`grid-3 ${styles.cats}`}>
+            {categories.map((c) => (
+              <li key={c.title} className={styles.cat}>
+                <h2 className={styles.catTitle}>{c.title}</h2>
+                <ul className={styles.articles}>
+                  {c.articles.map((a) => (
+                    <li key={a.slug}>
+                      <Link href={routes.helpArticle(a.slug)} className={styles.articleLink}>
+                        {a.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        )
       ) : (
-        <ul className={`grid-3 ${styles.cats}`}>
-          {shown.map((c) => (
-            <li key={c.title} className={styles.cat}>
-              <h2 className={styles.catTitle}>{c.title}</h2>
-              <ul className={styles.articles}>
-                {c.articles.map((a) => (
-                  <li key={a.slug}>{a.title}</li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
+        <section className={styles.results} aria-labelledby={`${id}-results`} aria-busy={loading}>
+          <h2 id={`${id}-results`} className="sr-only">
+            {t('resultsTitle')}
+          </h2>
+          {search.isError && (
+            <p className={`alert alert-bad ${styles.searchError}`} role="status">
+              {t('searchError')}
+            </p>
+          )}
+          {loading && !results ? (
+            <div className={styles.resultList}>
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="skeleton" style={{ height: 64 }} />
+              ))}
+            </div>
+          ) : results && results.length > 0 ? (
+            <ul className={styles.resultList} style={loading ? { opacity: 0.6 } : undefined}>
+              {results.map((r) => (
+                <li key={r.slug} className={styles.result}>
+                  <Link href={routes.helpArticle(r.slug)} className={styles.resultTitle}>
+                    {r.title}
+                  </Link>
+                  <p className={styles.resultMeta}>{r.category}</p>
+                  {r.excerpt && <p className={styles.resultExcerpt}>{r.excerpt}</p>}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className={styles.empty}>{t('noResults')}</p>
+          )}
+        </section>
       )}
     </>
   );

@@ -1,7 +1,19 @@
 import type { LiveEvent } from './types';
 
-/** RFC 5545 calendar file for a live session, with the join link and a 15-minute reminder. */
-export function eventIcs(event: LiveEvent, organizer: string, durationMinutes = 60): string {
+/** Who the invite is from: the school, with its support address when it has one (no platform address is assumed). */
+export interface Organizer {
+  name: string;
+  email: string;
+}
+
+/** A live event, with its real length when the caller has it (`/me/live/{id}`, schedule rows). */
+export type CalendarEvent = LiveEvent & { durationMin?: number };
+
+/**
+ * RFC 5545 calendar file for a live session, with the join link and a 15-minute reminder. The end is the session's
+ * real length (`durationMin`); only an event without one (the dashboard's `next_event`) falls back to an hour.
+ */
+export function eventIcs(event: CalendarEvent, organizer: Organizer, durationMinutes = event.durationMin ?? 60): string {
   const stamp = (d: Date) =>
     d
       .toISOString()
@@ -17,12 +29,13 @@ export function eventIcs(event: LiveEvent, organizer: string, durationMinutes = 
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',
-    `UID:${event.id}@coursiva`,
+    `UID:${event.id}@${organizer.email.split('@')[1] || 'live-session'}`,
     `DTSTAMP:${stamp(new Date())}`,
     `DTSTART:${stamp(start)}`,
     `DTEND:${stamp(end)}`,
     `SUMMARY:${esc(event.title)}`,
-    `ORGANIZER;CN=${esc(organizer)}:mailto:noreply@coursiva.app`,
+    // ORGANIZER needs an address; without the school's support e-mail the (optional) property is left out.
+    ...(organizer.email ? [`ORGANIZER;CN=${esc(organizer.name)}:mailto:${organizer.email}`] : []),
     ...(event.joinUrl ? [`URL:${event.joinUrl}`, `DESCRIPTION:${esc(`Join: ${event.joinUrl}`)}`] : []),
     'BEGIN:VALARM',
     'TRIGGER:-PT15M',
@@ -35,7 +48,7 @@ export function eventIcs(event: LiveEvent, organizer: string, durationMinutes = 
   ].join('\r\n');
 }
 
-export function downloadIcs(event: LiveEvent, organizer: string) {
+export function downloadIcs(event: CalendarEvent, organizer: Organizer) {
   const url = URL.createObjectURL(new Blob([eventIcs(event, organizer)], { type: 'text/calendar' }));
   const a = document.createElement('a');
   a.href = url;

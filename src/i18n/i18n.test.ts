@@ -80,3 +80,29 @@ describe('message catalogues', () => {
     expect(es.common.skipToContent).toBe(en2.common.skipToContent);
   });
 });
+
+// Courses made in the dashboard default to `guarantee_days: 0`: no "0-day money-back guarantee" anywhere.
+describe('guarantee copy', () => {
+  const en = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'messages/en.json'), 'utf8')) as {
+    course: { guarantee: string };
+    checkout: { securedBy: string; terms: string };
+    cart: { trustGuarantee: string };
+    order: { invoiceFoot: string };
+  };
+  const fmt = (msg: string, values: Record<string, unknown>) =>
+    String(new IntlMessageFormat(msg, 'en').format({ terms: (c: unknown) => c, refund: (c: unknown) => c, ...values } as never));
+
+  it('drops the money-back promise when the course has none, and keeps it when it has one', () => {
+    expect(fmt(en.course.guarantee, { days: 0 })).toBe('Instant access after purchase');
+    expect(fmt(en.course.guarantee, { days: 14 })).toBe('14-day money-back guarantee');
+    expect(fmt(en.checkout.securedBy, { days: 0 })).toBe('Secured by Stripe');
+    expect(fmt(en.checkout.securedBy, { days: 30 })).toBe('Secured by Stripe · 30-day money-back guarantee');
+    expect(fmt(en.checkout.terms, { days: 0 })).not.toContain('0-day');
+    expect(fmt(en.checkout.terms, { days: 7 })).toContain('7-day refund policy');
+  });
+
+  it('makes no fixed 30-day promise on the cart or invoice', () => {
+    expect(en.cart.trustGuarantee).not.toMatch(/\d+-day/);
+    expect(en.order.invoiceFoot).not.toMatch(/\d+-day/);
+  });
+});

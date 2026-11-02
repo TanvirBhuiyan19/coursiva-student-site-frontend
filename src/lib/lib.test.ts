@@ -1,7 +1,9 @@
+import type { CourseDetail } from '@/features/catalog/types';
 import { camelize, snakeize } from './api/case';
 import { formatBytes, formatClock, formatMoney, stars, timeAgo } from './format';
 import { isPrivatePath, routes } from './routes';
-import { breadcrumbJsonLd, metaDescription } from './seo';
+import { parseAttributes, parseHeadCode, reactProps } from './headCode';
+import { breadcrumbJsonLd, metaDescription, siteIcons, siteOpenGraph } from './seo';
 import { brandCss, brandTokens, oklchToHex } from './theme';
 
 describe('case conversion (wire format)', () => {
@@ -12,6 +14,34 @@ describe('case conversion (wire format)', () => {
     expect(code.cover.altText).toBe('x_y');
     expect(code.items[0]!.courseSlug).toBe('a_b');
     expect(snakeize(code)).toEqual(wire);
+  });
+
+  it('maps a course outline lesson, its summary (string or null) included', () => {
+    const wire = {
+      modules: [
+        {
+          id: 'm1',
+          title: 'Start',
+          lessons: [
+            {
+              id: 'l1',
+              title: 'Intro',
+              type: 'video',
+              duration_seconds: 60,
+              question_count: null,
+              free_preview: true,
+              summary: 'Why it_matters.',
+            },
+            { id: 'l2', title: 'Notes', type: 'text', duration_seconds: null, question_count: null, free_preview: false, summary: null },
+          ],
+        },
+      ],
+    };
+    const { modules } = camelize<Pick<CourseDetail, 'modules'>>(wire);
+    expect(modules[0]!.lessons.map((l) => [l.freePreview, l.summary])).toEqual([
+      [true, 'Why it_matters.'],
+      [false, null],
+    ]);
   });
 });
 
@@ -80,6 +110,63 @@ describe('seo', () => {
     expect(b.itemListElement).toEqual([
       { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://learn.example.com' },
       { '@type': 'ListItem', position: 2, name: 'Courses', item: 'https://learn.example.com/courses' },
+    ]);
+  });
+  it('picks the favicon: site builder favicon → Branding icon → logo → generated PNG tile', () => {
+    const none = { faviconUrl: null, iconUrl: null, logoUrl: null };
+    expect(siteIcons(none)).toEqual({ icon: [{ url: '/icon.png', type: 'image/png' }], apple: '/icon.png' });
+    expect(siteIcons({ ...none, logoUrl: '/logo.webp' })).toEqual({ icon: [{ url: '/logo.webp' }], apple: '/logo.webp' });
+    expect(siteIcons({ ...none, logoUrl: '/logo.webp', iconUrl: '/icon.jpg' })).toEqual({
+      icon: [{ url: '/icon.jpg' }],
+      apple: '/icon.jpg',
+    });
+    expect(siteIcons({ faviconUrl: '/fav.ico', iconUrl: '/icon.jpg', logoUrl: '/logo.webp' })).toEqual({
+      icon: [{ url: '/fav.ico' }],
+      apple: '/icon.jpg',
+    });
+  });
+});
+
+describe('school head code', () => {
+  it('keeps head elements verbatim and drops comments, <base> and anything else', () => {
+    const code = [
+      '<!-- analytics -->',
+      '<meta name="google-site-verification" content="abc">',
+      '<link rel="preconnect" href="https://cdn.example" crossorigin>',
+      '<script async src="https://cdn.example/a.js"></script>',
+      '<script>window.x = "<b>";</script>',
+      '<style>.x{color:red}</style>',
+      '<base href="https://evil.example/">',
+      '<div>not a head element</div>',
+    ].join('\n');
+    const els = parseHeadCode(code);
+    expect(els.map((e) => e.tag)).toEqual(['meta', 'link', 'script', 'script', 'style']);
+    expect(els[0]!.attrs).toEqual({ name: 'google-site-verification', content: 'abc' });
+    expect(els[3]!.content).toBe('window.x = "<b>";');
+    expect(reactProps(els[1]!.attrs)).toEqual({ rel: 'preconnect', href: 'https://cdn.example', crossOrigin: '' });
+    expect(reactProps(els[2]!.attrs)).toEqual({ async: true, src: 'https://cdn.example/a.js' });
+  });
+  it('drops inline event handlers', () => {
+    expect(parseAttributes(`src="x.js" onload='alert(1)' data-id=7`)).toEqual({ src: 'x.js', 'data-id': '7' });
+  });
+});
+
+describe('Open Graph', () => {
+  const site = {
+    name: 'Amplify',
+    locales: ['en-US', 'es-ES'],
+    seo: { ogImageUrl: 'https://cdn.example/share.png' },
+  } as unknown as Parameters<typeof siteOpenGraph>[0];
+  it('carries the site-wide fields every page must keep (pages replace the whole object)', () => {
+    expect(siteOpenGraph(site, 'en-US')).toEqual({
+      siteName: 'Amplify',
+      type: 'website',
+      locale: 'en_US',
+      alternateLocale: ['es_ES'],
+      images: [{ url: 'https://cdn.example/share.png', width: 1200, height: 630 }],
+    });
+    expect(siteOpenGraph(site, 'en-US', 'https://cdn.example/page.png').images).toEqual([
+      { url: 'https://cdn.example/page.png', width: 1200, height: 630 },
     ]);
   });
 });

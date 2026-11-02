@@ -1,5 +1,6 @@
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
+import { InstructorAvatar } from '@/features/instructors/components/InstructorAvatar';
 import { routes } from '@/lib/routes';
 import { useFormat } from '@/lib/useFormat';
 import type { CourseSummary } from '../types';
@@ -16,7 +17,7 @@ export function CourseRow({ course }: { course: CourseSummary }) {
       <CourseCover cover={course.cover} height={88} radius={10} className={styles.rowCover} sizes="150px" />
       <div className={styles.rowBody}>
         <div className={styles.topRow} style={{ justifyContent: 'flex-start' }}>
-          <span className="eyebrow eyebrow-brand">{course.category.name}</span>
+          {course.category && <span className="eyebrow eyebrow-brand">{course.category.name}</span>}
           <span className="tag tag-soft">{t(`levels.${course.level}`)}</span>
         </div>
         <h3 className={styles.title} style={{ marginTop: 4 }}>
@@ -25,7 +26,17 @@ export function CourseRow({ course }: { course: CourseSummary }) {
           </Link>
         </h3>
         <p className={styles.meta} style={{ marginTop: 5 }}>
-          {course.instructor.name}
+          {course.instructor.slug ? (
+            <Link href={routes.instructor(course.instructor.slug)} className={styles.instructorLink}>
+              <InstructorAvatar person={course.instructor} size={18} fontSize={7.5} />
+              {course.instructor.name}
+            </Link>
+          ) : (
+            <>
+              <InstructorAvatar person={course.instructor} size={18} fontSize={7.5} />
+              {course.instructor.name}
+            </>
+          )}
           <span aria-hidden="true">·</span>
           <span className="stars" aria-hidden="true">
             ★
@@ -38,7 +49,7 @@ export function CourseRow({ course }: { course: CourseSummary }) {
           {f.duration(course.durationMinutes)}
         </p>
       </div>
-      <RowState slug={course.slug} price={f.money(course.price)} />
+      <RowState slug={course.slug} price={f.coursePrice(course.price, course.pricing)} />
     </article>
   );
 }

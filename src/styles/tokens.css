@@ -62,6 +62,9 @@
   --toast-bg: oklch(0.22 0.02 280);
   --on-accent: oklch(1 0 0);
   --glass: oklch(1 0 0 / 0.9);
+  /* Cards and lines on brand / dark bands (site-builder sections). */
+  --on-dark-card: oklch(1 0 0 / 0.1);
+  --on-dark-line: oklch(1 0 0 / 0.22);
 
   /* Type */
   --font-body: var(--font-instrument-sans), system-ui, sans-serif;
@@ -76,6 +79,37 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
+  --radius-btn: 10px;
+  /* Section spacing multiplier (site-builder theme "density"). */
+  --density: 1;
+}
+
+/*
+ * The school's site-builder theme (`GET /site` → theme), set as data-* on <html> by the root layout. Defaults above
+ * are "Bricolage + Instrument", "Soft" corners, "Filled" buttons and "Comfortable" density.
+ */
+:root[data-font='editorial_serif'] {
+  --font-display: Georgia, 'Times New Roman', serif;
+}
+:root[data-font='minimal_sans'] {
+  --font-display: system-ui, sans-serif;
+}
+:root[data-radius='sharp'] {
+  --radius-sm: 3px;
+  --radius: 4px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-btn: 4px;
+}
+:root[data-radius='round'] {
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 26px;
+  --radius-btn: 99px;
+}
+:root[data-density='compact'] {
+  --density: 0.7;
 }
 
 @media (max-width: 1023px) {

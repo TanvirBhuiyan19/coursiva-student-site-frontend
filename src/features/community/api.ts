@@ -4,11 +4,12 @@ import { learningKeys } from '@/features/learning/api';
 import type { Dashboard, LiveEvent } from '@/features/learning/types';
 import { api } from '@/lib/api/client';
 import type { Paginated } from '@/lib/api/types';
-import type { CommunityOverview, NewPostInput, Post } from './types';
+import type { CommunityOverview, FlagReason, NewPostInput, Post, Reply } from './types';
 
 export const communityKeys = {
   overview: ['community', 'overview'] as const,
   posts: (space: string, sort: 'new' | 'top') => ['community', 'posts', space, sort] as const,
+  replies: (postId: string) => ['community', 'replies', postId] as const,
 };
 
 export function useCommunity() {
@@ -36,6 +37,44 @@ export function useCreatePost() {
 }
 
 type PostPages = InfiniteData<Paginated<Post>>;
+
+/** Puts a post the API returned (e.g. after a reply: its new reply count) into every cached feed that holds it. */
+function replacePost(qc: ReturnType<typeof useQueryClient>, post: Post) {
+  qc.setQueriesData<PostPages>({ queryKey: ['community', 'posts'] }, (data) =>
+    data
+      ? { ...data, pages: data.pages.map((p) => ({ ...p, data: p.data.map((x) => (x.id === post.id ? { ...x, ...post } : x)) })) }
+      : data,
+  );
+}
+
+/** A post's replies, oldest first — loaded when the learner opens the thread. */
+export function useReplies(postId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: communityKeys.replies(postId),
+    queryFn: () => api.get<Reply[]>(`/community/posts/${postId}/replies`),
+    enabled,
+  });
+}
+
+/** Reply to a post → `201 Post` (its new reply count); the thread is refetched. */
+export function useCreateReply(postId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: string) => api.post<Post>(`/community/posts/${postId}/replies`, { body }),
+    onSuccess: (post) => {
+      replacePost(qc, post);
+      void qc.invalidateQueries({ queryKey: communityKeys.replies(postId) });
+    },
+  });
+}
+
+/** Report a post to the moderators → `202 { flagged }`. Enough reports hold it for review. */
+export function useFlagPost() {
+  return useMutation({
+    mutationFn: ({ postId, reason }: { postId: string; reason: FlagReason }) =>
+      api.post<{ flagged: boolean }>(`/community/posts/${postId}/flags`, { reason }),
+  });
+}
 
 /** Like/unlike — optimistic across every cached feed containing the post. */
 export function useToggleLike() {

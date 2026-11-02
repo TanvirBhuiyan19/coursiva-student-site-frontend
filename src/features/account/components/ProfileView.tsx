@@ -1,14 +1,19 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useState, type SyntheticEvent } from 'react';
 import { useToast } from '@/components/toast/Toaster';
 import { useHardNavigate } from '@/i18n/navigation';
-import { useLogout } from '@/features/auth/api';
+import { signOutRedirect, useLogout } from '@/features/auth/api';
+import { BookingsCard } from '@/features/bookings/components/BookingsViews';
 import { ApiError } from '@/lib/api/errors';
 import { routes } from '@/lib/routes';
-import { useFormat } from '@/lib/useFormat';
 import { useProfile, useUpdatePassword, useUpdatePreferences, useUpdateProfile } from '../api';
 import type { Preferences, Profile, ProfileInput } from '../types';
+import { BillingSection } from './BillingSection';
+import { DiscordCard } from './DiscordCard';
+import { DownloadsSection } from './DownloadsSection';
+import { SurveyDialog } from './SurveyDialog';
 import styles from './Profile.module.css';
 
 export function ProfileView() {
@@ -29,58 +34,20 @@ export function ProfileView() {
 
 function ProfileForms({ profile }: { profile: Profile }) {
   const t = useTranslations('account');
-  const f = useFormat();
   const logout = useLogout();
   const hardNavigate = useHardNavigate();
+  // An e-mailed survey link: `/account?survey={id}`.
+  const survey = useSearchParams().get('survey');
   return (
     <>
+      {survey && <SurveyDialog surveyId={survey} />}
       <DetailsCard profile={profile} />
       <PasswordCard />
-      {profile.card && (
-        <section className={styles.card} aria-labelledby="pay-t">
-          <h2 id="pay-t" className={styles.title}>
-            {t('payment')}
-          </h2>
-          <div className={styles.row}>
-            <span className={styles.brand}>{profile.card.brand.toUpperCase()}</span>
-            <div style={{ flex: 1 }}>
-              <p className={styles.strong}>•••• {profile.card.last4}</p>
-              <p className={styles.sub}>
-                {t('cardSub', { exp: `${String(profile.card.expMonth).padStart(2, '0')}/${String(profile.card.expYear).slice(-2)}` })}
-              </p>
-            </div>
-            <a
-              href={`/api/v1/me/billing-portal?return=${encodeURIComponent(routes.account)}`}
-              className="link-btn"
-              style={{ fontSize: 13.5 }}
-            >
-              {t('updateCard')}
-            </a>
-          </div>
-        </section>
-      )}
       <PreferencesCard prefs={profile.preferences} />
-      {profile.membership && (
-        <section className={styles.card} aria-labelledby="mem-t">
-          <div className={styles.row}>
-            <div style={{ flex: 1 }}>
-              <h2 id="mem-t" className={styles.title}>
-                {t('membership')}
-              </h2>
-              <p className={styles.sub}>
-                {t('membershipSub', {
-                  plan: profile.membership.planName,
-                  price: f.money(profile.membership.price),
-                  date: f.date(profile.membership.renewsAt),
-                })}
-              </p>
-            </div>
-            <a href={`/api/v1/me/billing-portal?return=${encodeURIComponent(routes.account)}`} className="btn btn-outline">
-              {t('managePlan')}
-            </a>
-          </div>
-        </section>
-      )}
+      <DiscordCard />
+      <BillingSection profile={profile} />
+      <DownloadsSection />
+      <BookingsCard className={styles.card} />
       <div className={styles.footer}>
         <button
           type="button"
@@ -88,7 +55,11 @@ function ProfileForms({ profile }: { profile: Profile }) {
           disabled={logout.isPending}
           onClick={() =>
             logout.mutate(undefined, {
-              onSuccess: () => hardNavigate(routes.signIn()),
+              onSuccess: (result) => {
+                const idp = signOutRedirect(result);
+                if (idp) window.location.assign(idp);
+                else hardNavigate(routes.signIn());
+              },
             })
           }
         >
@@ -116,8 +87,11 @@ function DetailsCard({ profile }: { profile: Profile }) {
     website: profile.website,
   };
   const [form, setForm] = useState(initial);
+  const [currentPassword, setCurrentPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const dirty = (Object.keys(initial) as (keyof ProfileInput)[]).some((k) => form[k] !== initial[k]);
+  // A new address needs the current password, and stays pending until the link sent to it is opened.
+  const emailChanged = form.email.trim().toLowerCase() !== profile.email.toLowerCase();
 
   // Warn before leaving with unsaved changes.
   useEffect(() => {
@@ -127,18 +101,22 @@ function DetailsCard({ profile }: { profile: Profile }) {
     return () => window.removeEventListener('beforeunload', onUnload);
   }, [dirty]);
 
-  const set = (k: keyof ProfileInput) => (e: { target: { value: string } }) => {
+  const set = (k: Exclude<keyof ProfileInput, 'currentPassword'>) => (e: { target: { value: string } }) => {
     setForm((f) => ({ ...f, [k]: e.target.value }));
     setErrors((er) => ({ ...er, [k]: '' }));
   };
   const submit = (e: SyntheticEvent) => {
     e.preventDefault();
-    update.mutate(form, {
-      onSuccess: () => toast(t('savedToast')),
+    update.mutate(emailChanged ? { ...form, currentPassword } : form, {
+      onSuccess: (saved) => {
+        setForm({ name: saved.name, email: saved.email, bio: saved.bio, timezone: saved.timezone, website: saved.website });
+        setCurrentPassword('');
+        toast(emailChanged && saved.pendingEmail ? t('emailPendingToast', { email: saved.pendingEmail }) : t('savedToast'));
+      },
       onError: (err) => setErrors(err instanceof ApiError && err.isValidation ? err.fieldErrors : { form: t('saveFailed') }),
     });
   };
-  const field = (k: keyof ProfileInput) => ({
+  const field = (k: Exclude<keyof ProfileInput, 'currentPassword'>) => ({
     id: `${id}-${k}`,
     value: form[k],
     onChange: set(k),
@@ -175,8 +153,30 @@ function DetailsCard({ profile }: { profile: Profile }) {
           </label>
           <input className="input" type="email" autoComplete="email" {...field('email')} />
           <FieldError id={`${id}-email-err`} message={errors.email} />
+          {!emailChanged && profile.pendingEmail && <p className="field-hint">{t('emailPending', { email: profile.pendingEmail })}</p>}
         </div>
       </div>
+      {emailChanged && (
+        <div className="field">
+          <label className="field-label" htmlFor={`${id}-email-password`}>
+            {t('currentPassword')}
+          </label>
+          <input
+            id={`${id}-email-password`}
+            className="input"
+            type="password"
+            autoComplete="current-password"
+            value={currentPassword}
+            onChange={(e) => {
+              setCurrentPassword(e.target.value);
+              setErrors((er) => ({ ...er, currentPassword: '' }));
+            }}
+            aria-invalid={!!errors.currentPassword}
+            aria-describedby={errors.currentPassword ? `${id}-email-password-err` : undefined}
+          />
+          <FieldError id={`${id}-email-password-err`} message={errors.currentPassword} />
+        </div>
+      )}
       <div className="field">
         <label className="field-label" htmlFor={`${id}-bio`}>
           {t('bio')}
@@ -223,6 +223,7 @@ function DetailsCard({ profile }: { profile: Profile }) {
             className="btn btn-outline"
             onClick={() => {
               setForm(initial);
+              setCurrentPassword('');
               setErrors({});
             }}
           >
@@ -308,7 +309,7 @@ function PasswordCard() {
   );
 }
 
-const PREF_KEYS: (keyof Preferences)[] = ['newLessons', 'communityReplies', 'liveReminders'];
+const PREF_KEYS: (keyof Preferences)[] = ['newLessons', 'communityReplies', 'liveReminders', 'certificateReminders'];
 
 function PreferencesCard({ prefs }: { prefs: Preferences }) {
   const t = useTranslations('account');
@@ -320,19 +321,23 @@ function PreferencesCard({ prefs }: { prefs: Preferences }) {
         {t('notifications')}
       </h2>
       <ul className={styles.prefs}>
-        {PREF_KEYS.map((k) => (
-          <li key={k}>
-            <span id={`pref-${k}`}>{t(`prefs.${k}`)}</span>
-            <button
-              type="button"
-              role="switch"
-              className="switch"
-              aria-checked={prefs[k]}
-              aria-labelledby={`pref-${k}`}
-              onClick={() => update.mutate({ ...prefs, [k]: !prefs[k] }, { onError: () => toast(t('saveFailed')) })}
-            />
-          </li>
-        ))}
+        {PREF_KEYS.map((k) => {
+          // A switch an older API doesn't send yet reads as on (every email switch defaults to on).
+          const on = Object.hasOwn(prefs, k) ? prefs[k] : true;
+          return (
+            <li key={k}>
+              <span id={`pref-${k}`}>{t(`prefs.${k}`)}</span>
+              <button
+                type="button"
+                role="switch"
+                className="switch"
+                aria-checked={on}
+                aria-labelledby={`pref-${k}`}
+                onClick={() => update.mutate({ ...prefs, [k]: !on }, { onError: () => toast(t('saveFailed')) })}
+              />
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

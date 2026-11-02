@@ -1,0 +1,132 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  background: var(--surface);
+}
+.head,
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.subTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tx-strong);
+  margin: 0 0 6px;
+}
+.muted {
+  color: var(--tx-muted);
+  font-size: 13px;
+  margin: 0;
+}
+.body {
+  font-size: 14px;
+  margin: 6px 0 0;
+  white-space: pre-wrap;
+}
+.rich {
+  font-size: 14px;
+  margin: 6px 0 0;
+}
+.deadline p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.deadline .muted {
+  font-weight: 400;
+  margin-top: 2px;
+}
+.rubric,
+.files,
+.scores,
+.feedbackList,
+.reviewList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rubric li {
+  font-size: 13.5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.rubricLabel {
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.rubricMax {
+  margin-inline-start: auto;
+  color: var(--tx-muted);
+  font-size: 12.5px;
+}
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--surface-soft);
+}
+.file {
+  font-size: 13.5px;
+}
+.quarantined {
+  color: var(--bad-fg);
+  text-decoration: line-through;
+}
+.grade {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.score {
+  font-weight: 700;
+  margin: 0;
+}
+.feedback,
+.reviewItem {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  background: var(--surface);
+}
+.feedbackHead {
+  font-weight: 600;
+  font-size: 13.5px;
+  margin: 0 0 4px;
+}
+.scores li {
+  font-size: 13px;
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.work {
+  border-inline-start: 3px solid var(--line-strong);
+  padding-inline-start: 12px;
+}
+.criterion {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.scale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}

@@ -4,7 +4,7 @@ import { useToast } from '@/components/toast/Toaster';
 import { useSession } from '@/features/auth/api';
 import { useRsvp } from '@/features/community/api';
 import { useFormat } from '@/lib/useFormat';
-import { downloadIcs } from '../calendar';
+import { downloadIcs, type Organizer } from '../calendar';
 import type { LiveEvent } from '../types';
 import styles from './Dashboard.module.css';
 
@@ -12,7 +12,7 @@ import styles from './Dashboard.module.css';
  * Next live session. Provider-aware: BYO Zoom/Meet/Teams opens the provider with the learner's personal link;
  * the built-in room joins in the browser. Times show in the learner's own timezone.
  */
-export function LiveBanner({ event, organizer }: { event: LiveEvent; organizer: string }) {
+export function LiveBanner({ event, organizer }: { event: LiveEvent; organizer: Organizer }) {
   const t = useTranslations('learning');
   const f = useFormat();
   const toast = useToast();

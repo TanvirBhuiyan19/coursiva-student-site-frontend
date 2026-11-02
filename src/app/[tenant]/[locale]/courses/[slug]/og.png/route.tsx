@@ -53,7 +53,7 @@ export async function GET(_req: Request, { params }: RouteContext<'/[tenant]/[lo
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         <div style={{ fontSize: 26, letterSpacing: 3, textTransform: 'uppercase', color: c.tint, opacity: 0.8 }}>
-          {course.category.name}
+          {course.category?.name ?? ''}
         </div>
         <div style={{ fontSize: 72, fontWeight: 800, lineHeight: 1.05, letterSpacing: -2 }}>{course.title}</div>
       </div>

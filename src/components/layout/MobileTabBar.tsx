@@ -17,7 +17,7 @@ export function MobileTabBar({ features }: { features: Site['features'] }) {
   const tabs: { href: string; label: string; icon: IconName; match: string[] }[] = [
     { href: routes.home, label: t('home'), icon: 'home', match: [] },
     { href: routes.courses, label: t('courses'), icon: 'grid', match: ['/courses'] },
-    { href: routes.learning, label: t('learningShort'), icon: 'play', match: ['/learning', '/certificates'] },
+    { href: routes.learning, label: t('learningShort'), icon: 'play', match: ['/learning', '/certificates', '/live'] },
     ...(features.community ? [{ href: routes.community, label: t('community'), icon: 'users' as const, match: ['/community'] }] : []),
     { href: routes.account, label: t('profile'), icon: 'user', match: ['/account'] },
   ];

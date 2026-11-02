@@ -3,7 +3,9 @@
  * a custom domain, and a plan without community — the storefront must adapt to all of it.
  */
 import type { CourseRow, TenantData } from '../lib/records';
+import { northwindSite } from './site';
 import { amplify } from './amplify';
+import { NO_TRACKING } from '@/features/tracking/ids';
 import { funnelQuiz, modules, P, Q, V } from './build';
 
 const iso = (s: string) => new Date(s).toISOString();
@@ -49,7 +51,8 @@ const courses: CourseRow[] = [
     categorySlug: 'wellbeing',
     coverColor: 'oklch(0.66 0.10 200)',
     level: 'all_levels',
-    price: 4900,
+    // Free: enrolled in one click from the course page (no checkout, no card).
+    price: 0,
     rating: 4.8,
     reviewCount: 96,
     studentCount: 720,
@@ -94,6 +97,15 @@ export function northwind(): TenantData {
   const base = amplify();
   return {
     ...base,
+    // A fixed amount per sale, first click, no expiry, renewals for as long as the member stays.
+    affiliateProgram: {
+      commissionType: 'fixed',
+      fixedAmount: 1500,
+      cookieDays: 0,
+      attribution: 'first_click',
+      recurring: true,
+      recurringMonths: 0,
+    },
     resolution: {
       tenant: 'northwind',
       primaryHost: 'northwind.localhost',
@@ -108,11 +120,13 @@ export function northwind(): TenantData {
       legalName: 'Northwind Yoga Ltd',
       tagline: 'Calm, strong, steady — yoga and breathwork you can do at home.',
       logoUrl: null,
+      iconUrl: null,
       whiteLabel: true,
       brand: { hue: 158, chroma: 0.14 },
       defaultLocale: 'en-GB',
       locales: ['en-GB'],
       currency: 'GBP',
+      timeZone: 'Europe/London',
       primaryHost: 'northwind.localhost',
       supportEmail: 'hello@northwindyoga.co.uk',
       social: [{ network: 'instagram', url: 'https://www.instagram.com/northwindyoga' }],
@@ -130,6 +144,7 @@ export function northwind(): TenantData {
       },
       oauthProviders: [],
       features: { membership: false, community: false, certificates: true, streaks: false },
+      tracking: NO_TRACKING,
     },
     instructor: {
       name: 'Hannah Cole',
@@ -139,6 +154,8 @@ export function northwind(): TenantData {
       bio: 'Fifteen years of teaching, from Leeds community halls to online classes of thousands.',
       studentCount: 2770,
     },
+    // No published instructor profiles: `/instructors` is an empty state and course instructors aren't links.
+    instructorProfiles: [],
     categories: [
       { slug: 'practice', name: 'Practice', color: 'oklch(0.62 0.12 158)' },
       { slug: 'wellbeing', name: 'Wellbeing', color: 'oklch(0.66 0.10 200)' },
@@ -148,6 +165,29 @@ export function northwind(): TenantData {
     bundles: [],
     orderBump: null,
     orderPrefix: 'NWY',
+    // Orders → Tax: Australian GST included in prices; California sales tax added (so US buyers choose their state).
+    taxRegistrations: [
+      {
+        country: 'Australia',
+        subdivision: null,
+        kind: 'GST',
+        registered: true,
+        taxId: 'ABN 51 824 753 556',
+        rate: null,
+        inclusive: true,
+        reverseCharge: false,
+      },
+      {
+        country: 'United States',
+        subdivision: 'CA',
+        kind: 'Sales tax',
+        registered: true,
+        taxId: null,
+        rate: 7.25,
+        inclusive: false,
+        reverseCharge: false,
+      },
+    ],
     home: {
       ...base.home,
       hero: {
@@ -182,5 +222,20 @@ export function northwind(): TenantData {
     leaderboard: [],
     notifications: [],
     certificates: [],
+    quizAttempts: [],
+    scormAttempts: [],
+    submissions: [],
+    peerReviews: [],
+    // No AI studio on this plan: the player hides the tutor.
+    tutor: { enabled: false, handoff: false, resting: false },
+    tutorThreads: [],
+    tutorAsks: [],
+    // Discord isn't connected: the account page hides the card.
+    discord: { available: false },
+    discordLinks: [],
+    watermark: null,
+    builder: northwindSite(),
+    privacy: { cookieBanner: true },
+    mediaVideos: [],
   };
 }

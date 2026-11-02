@@ -4,9 +4,11 @@ import { getTranslations } from 'next-intl/server';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { CourseDetailView } from '@/features/catalog/components/CourseDetailView';
 import { getCourse } from '@/features/catalog/server';
+import { TrackView } from '@/features/tracking/TrackView';
 import { currentScope, getSite, localeBase, pageAlternates } from '@/features/tenant/server';
 import { routes } from '@/lib/routes';
-import { breadcrumbJsonLd, courseJsonLd, faqJsonLd, metaDescription } from '@/lib/seo';
+import { breadcrumbJsonLd, courseJsonLd, faqJsonLd, metaDescription, siteOpenGraph } from '@/lib/seo';
+import { withSeo } from '@/features/seo/server';
 
 /** Course pages render on first visit and are then served from cache until the course changes (tag revalidation). */
 export function generateStaticParams() {
@@ -16,24 +18,24 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<'/[tenant]/[locale]/courses/[slug]'>): Promise<Metadata> {
   const { slug } = await params;
   const { tenant, locale } = await currentScope();
-  const course = await getCourse(tenant, slug, locale);
+  const [site, course] = await Promise.all([getSite(tenant, locale), getCourse(tenant, slug, locale)]);
   if (!course) return {};
   const { alternates, url: path } = await pageAlternates(routes.course(course.slug));
   const description = metaDescription(course.excerpt);
   const image = course.cover.url ?? `${path}/og.png`;
-  return {
+  return withSeo(routes.course(course.slug), {
     title: course.title,
     description,
     alternates,
     openGraph: {
-      type: 'website',
+      ...siteOpenGraph(site, locale),
       url: path,
       title: course.title,
       description,
       images: [{ url: image, width: 1200, height: 630, alt: course.title }],
     },
     twitter: { card: 'summary_large_image', title: course.title, description, images: [image] },
-  };
+  });
 }
 
 export default async function CoursePage({ params }: PageProps<'/[tenant]/[locale]/courses/[slug]'>) {
@@ -61,6 +63,7 @@ export default async function CoursePage({ params }: PageProps<'/[tenant]/[local
         ]}
       />
       <CourseDetailView course={course} />
+      <TrackView id={course.slug} name={course.title} price={course.price} />
     </>
   );
 }

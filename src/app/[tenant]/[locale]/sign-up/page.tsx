@@ -15,7 +15,7 @@ export default async function SignUpPage() {
   return (
     <AuthLayout site={site}>
       <Suspense>
-        <AuthForm mode="signup" oauth={site.oauthProviders} />
+        <AuthForm mode="signup" oauth={site.oauthProviders} sso={site.ssoEnabled === true} screen={site.screens.auth} />
       </Suspense>
     </AuthLayout>
   );

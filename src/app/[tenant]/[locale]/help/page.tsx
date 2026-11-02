@@ -6,11 +6,12 @@ import styles from '@/features/account/components/Support.module.css';
 import { getHelp } from '@/features/account/server';
 import { currentScope, getSite, pageAlternates } from '@/features/tenant/server';
 import { routes } from '@/lib/routes';
+import { withSeo } from '@/features/seo/server';
 
 export async function generateMetadata(): Promise<Metadata> {
   const { tenant, locale } = await currentScope();
   const [site, t, { alternates }] = await Promise.all([getSite(tenant, locale), getTranslations('support'), pageAlternates(routes.help)]);
-  return { title: t('helpMeta'), description: t('helpDescription', { name: site.name }), alternates };
+  return withSeo(routes.help, { title: t('helpMeta'), description: t('helpDescription', { name: site.name }), alternates });
 }
 
 export default async function HelpPage() {

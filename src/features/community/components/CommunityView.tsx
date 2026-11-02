@@ -9,9 +9,10 @@ import { useRsvp } from '@/features/community/api';
 import type { Site } from '@/features/tenant/types';
 import { ApiError } from '@/lib/api/errors';
 import { useFormat } from '@/lib/useFormat';
-import { useCommunity, useCreatePost, usePosts, useToggleLike } from '../api';
+import { useCommunity, useCreatePost, usePosts } from '../api';
 import type { Space } from '../types';
 import styles from './Community.module.css';
+import { PostCard } from './PostCard';
 
 const ALL = 'sp_all';
 
@@ -31,10 +32,11 @@ export function CommunityView({ site }: { site: Pick<Site, 'name' | 'logoUrl'> }
   const sort = params.get('sort') === 'top' ? 'top' : 'new';
   const posts = usePosts(spaceId, sort, !!overview.data);
   const create = useCreatePost();
-  const like = useToggleLike();
   const rsvp = useRsvp();
   const [draft, setDraft] = useState('');
   const [postError, setPostError] = useState<string | null>(null);
+  /** The space a just-sent post waits for approval in (held for moderation: not in the feed yet). */
+  const [heldIn, setHeldIn] = useState<string | null>(null);
 
   const setParam = (k: string, v: string | null) => {
     const next = new URLSearchParams(params);
@@ -82,10 +84,12 @@ export function CommunityView({ site }: { site: Pick<Site, 'name' | 'logoUrl'> }
     create.mutate(
       { spaceId: postTarget.id, body: draft.trim() },
       {
-        onSuccess: () => {
+        onSuccess: (post) => {
           setDraft('');
           setPostError(null);
-          toast(t('posted', { space: postTarget.name }));
+          // A held post (e.g. a link from a new member) waits for a moderator before it shows in the feed.
+          setHeldIn(post.held ? postTarget.name : null);
+          toast(post.held ? t('awaitingApproval', { space: postTarget.name }) : t('posted', { space: postTarget.name }));
         },
         onError: (err) => setPostError(err instanceof ApiError ? (Object.values(err.fieldErrors)[0] ?? err.message) : t('postFailed')),
       },
@@ -249,7 +253,16 @@ export function CommunityView({ site }: { site: Pick<Site, 'name' | 'logoUrl'> }
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                 />
-                {postError && <p className="field-error">{postError}</p>}
+                {postError && (
+                  <p className="field-error" role="alert">
+                    {postError}
+                  </p>
+                )}
+                {heldIn && (
+                  <p className={`alert ${styles.heldNote}`} role="status">
+                    {t('awaitingApproval', { space: heldIn })}
+                  </p>
+                )}
                 <div className={styles.composerFoot}>
                   <span className={styles.postingIn}>{t.rich('postingIn', { space: postTarget.name, b: (c) => <b>{c}</b> })}</span>
                   <button type="submit" className="btn btn-primary btn-sm" disabled={create.isPending || !draft.trim()}>
@@ -269,44 +282,20 @@ export function CommunityView({ site }: { site: Pick<Site, 'name' | 'logoUrl'> }
           </div>
           {posts.isPending ? (
             <div className="skeleton" style={{ height: 300 }} />
+          ) : posts.isError ? (
+            <div className="alert alert-bad" role="alert">
+              {tc('errorBody')}{' '}
+              <button type="button" className="link-btn" onClick={() => void posts.refetch()}>
+                {tc('retry')}
+              </button>
+            </div>
           ) : feed.length === 0 ? (
             <p className={styles.empty}>{t('emptySpace')}</p>
           ) : (
             <ul className={styles.posts}>
               {feed.map((p) => (
                 <li key={p.id}>
-                  <article className={styles.post} aria-labelledby={`post-${p.id}`}>
-                    <header className={styles.postHead}>
-                      <span
-                        className="avatar"
-                        style={{ width: 36, height: 36, fontSize: 12.5, background: p.author.color }}
-                        aria-hidden="true"
-                      >
-                        {p.author.initials}
-                      </span>
-                      <div>
-                        <p id={`post-${p.id}`} className={styles.author}>
-                          {p.author.name} {p.author.isInstructor && <span className={styles.coach}>{t('coach')}</span>}
-                        </p>
-                        <p className={styles.postMeta}>
-                          <time dateTime={p.createdAt}>{f.ago(p.createdAt)}</time> · {p.spaceName}
-                        </p>
-                      </div>
-                    </header>
-                    <p className={styles.body}>{p.body}</p>
-                    <footer className={styles.postFoot}>
-                      <button
-                        type="button"
-                        className={styles.like}
-                        aria-pressed={p.liked}
-                        aria-label={t('likeLabel', { count: p.likes })}
-                        onClick={() => user && like.mutate({ postId: p.id, liked: !p.liked })}
-                      >
-                        <span aria-hidden="true">♥</span> {p.likes}
-                      </button>
-                      <span className={styles.replies}>{t('replies', { count: p.replies })}</span>
-                    </footer>
-                  </article>
+                  <PostCard post={p} />
                 </li>
               ))}
             </ul>

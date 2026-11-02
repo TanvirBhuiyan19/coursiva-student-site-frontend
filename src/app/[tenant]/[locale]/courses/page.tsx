@@ -8,7 +8,8 @@ import { getCatalog } from '@/features/catalog/server';
 import { getMembership } from '@/features/membership/server';
 import { currentScope, getSite, localeBase, pageAlternates } from '@/features/tenant/server';
 import { routes } from '@/lib/routes';
-import { breadcrumbJsonLd, courseListJsonLd } from '@/lib/seo';
+import { breadcrumbJsonLd, courseListJsonLd, siteOpenGraph } from '@/lib/seo';
+import { withSeo } from '@/features/seo/server';
 
 export async function generateMetadata(): Promise<Metadata> {
   const { tenant, locale } = await currentScope();
@@ -20,7 +21,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = t('title');
   const description = t('metaDescription', { name: site.name });
   // Filters are client-side query params: the canonical URL is always the unfiltered catalogue.
-  return { title, description, alternates, openGraph: { url, title, description } };
+  return withSeo(routes.courses, {
+    title,
+    description,
+    alternates,
+    openGraph: { ...siteOpenGraph(site, locale), url, title, description },
+  });
 }
 
 export default async function CoursesPage() {

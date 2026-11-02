@@ -1,0 +1,138 @@
+/* Lead forms: a card on the hosted page and in site-builder sections; flat and transparent in the embed frame. */
+.card {
+  max-width: 560px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 28px;
+  background: var(--surface);
+  color: var(--tx);
+  text-align: start;
+  position: relative;
+}
+.card[data-variant='page'],
+.card[data-align='center'] {
+  margin: 0 auto;
+}
+.card[data-variant='embed'] {
+  max-width: none;
+  border: none;
+  border-radius: 0;
+  padding: 4px;
+  background: transparent;
+}
+.title {
+  font-size: 22px;
+}
+.card[data-variant='page'] .title {
+  font-size: 28px;
+}
+.subtitle {
+  font-size: 14px;
+  color: var(--tx3);
+  margin-top: 6px;
+  white-space: pre-line;
+}
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 18px;
+}
+.honeypot {
+  position: absolute;
+  inset-inline-start: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.submit {
+  margin-top: 18px;
+}
+.failure {
+  margin-top: 14px;
+}
+.success {
+  margin-top: 14px;
+}
+.retry {
+  margin-top: 12px;
+}
+
+/* The embed frame's measured box (margins stay inside it). */
+.embed {
+  display: flow-root;
+}
+
+/* Rating: five radio buttons drawn as stars. */
+.rating {
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.rating legend {
+  padding: 0;
+  margin-bottom: 6px;
+}
+.stars {
+  display: flex;
+  gap: 4px;
+}
+.star {
+  font-size: 28px;
+  line-height: 1;
+  color: var(--star-empty);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+.star[data-on] {
+  color: var(--star-strong);
+}
+.star:has(input:focus-visible) {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* File fields. */
+.fileInput {
+  padding: 9px 12px;
+}
+.file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+.fileMeta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 160px;
+}
+.fileName {
+  font-size: 13.5px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.fileSize {
+  font-size: 12px;
+  color: var(--tx-muted);
+}
+.fileDone {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ok-fg);
+}
+
+@media (max-width: 719px) {
+  .card {
+    padding: 22px;
+  }
+  .card[data-variant='embed'] {
+    padding: 4px;
+  }
+}
